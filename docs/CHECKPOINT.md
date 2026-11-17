@@ -37,6 +37,8 @@ make passing-lab PASSING_PREVIEW=build/passing-fixture
 CI additionally browser-tests all eight gallery tabs and the passing Sankey. Builders
 refuse to overwrite existing outputs; select a new ignored output directory per review.
 The Hub release guide documents the clean two-phase synthetic dataset/Space update.
+Dataset manifests remain invariant between phases; only the Space manifest records the
+pinned dataset revision and Space publication readiness.
 
 ## Next Safe Work
 

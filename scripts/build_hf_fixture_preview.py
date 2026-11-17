@@ -86,10 +86,10 @@ def main():
     metadata = {"format_version": 1, "built_at": "2024-01-01T00:00:00+00:00",
                 "seasons": ["2024-25"], "rows": 7, "synthetic": True,
                 "usage_scope": "public_synthetic_demo", "builder_git_sha": state["git_sha"],
-                "builder_git_dirty": state["git_dirty"],
-                "dataset_publishable": dataset_publishable,
-                "space_publishable": space_publishable, "publishable": space_publishable}
-    _write_payload_manifest(dataset, {**metadata, "payload": "dataset"})
+                "builder_git_dirty": state["git_dirty"]}
+    _write_payload_manifest(dataset, {**metadata, "dataset_publishable": dataset_publishable,
+                                      "space_publishable": False, "publishable": False,
+                                      "payload": "dataset"})
     space.mkdir()
     source = Path("huggingface/space")
     shutil.copytree(source / "styles", space / "styles")
@@ -105,7 +105,9 @@ def main():
                      "SYNTHETIC DEMONSTRATION", dataset_id),
         encoding="utf-8")
     from knicks_history.hub_release import digest, MANIFEST_NAME
-    _write_payload_manifest(space, {**metadata, "payload": "space",
+    _write_payload_manifest(space, {**metadata, "dataset_publishable": dataset_publishable,
+                                    "space_publishable": space_publishable,
+                                    "publishable": space_publishable, "payload": "space",
                                     "dataset_id": dataset_id,
                                     "dataset_revision": args.dataset_revision,
                                     "dataset_manifest_sha256": digest(dataset / MANIFEST_NAME)})

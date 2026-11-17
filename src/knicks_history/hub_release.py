@@ -630,8 +630,12 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
               "seasons": seasons, "rows": total, "source_release_id": source["release_id"],
               "source_git_sha": source.get("git_sha"), "source_git_dirty": source.get("git_dirty"),
               "builder_git_sha": builder["git_sha"], "builder_git_dirty": builder["git_dirty"],
-              "source_builder_commits_match": commits_match, "redistribution_reviewed": gate["complete"], **status}
-    dataset_manifest = _write_payload_manifest(dataset, {**common, "payload": "dataset"})
+              "source_builder_commits_match": commits_match,
+              "redistribution_reviewed": gate["complete"]}
+    dataset_status = {"dataset_publishable": status["dataset_publishable"],
+                      "space_publishable": False, "publishable": False}
+    dataset_manifest = _write_payload_manifest(
+        dataset, {**common, **dataset_status, "payload": "dataset"})
     dataset_sha = digest(dataset / MANIFEST_NAME)
     space.mkdir(); template = _copy_space_source(space_source, space)
     games, features, monthly = prepared[space_season]
@@ -639,7 +643,7 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
     _generate_d3(games, features, monthly, build_result_paths(games), space / "charts")
     _generate_previews(games, features, monthly, space / "previews")
     (space / "index.html").write_text(_space_index(template, space_season, dataset_revision, games), encoding="utf-8")
-    space_manifest = _write_payload_manifest(space, {**common, "payload": "space", "space_season": space_season,
+    space_manifest = _write_payload_manifest(space, {**common, **status, "payload": "space", "space_season": space_season,
         "dataset_id": DATASET_ID, "dataset_revision": dataset_revision, "dataset_manifest_sha256": dataset_sha,
         "visualization": {"d3blocks": "2.3.4", "matplotlib": "3.11.2", "pandas": "2.3.3"}})
     summary = {"dataset": dataset_manifest, "space": space_manifest}; _write_json(output / "release.json", summary)
