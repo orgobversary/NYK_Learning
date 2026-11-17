@@ -16,6 +16,7 @@ from knicks_history.hub_release import (
     public_payload_allowed,
     resolve_team_dimension,
     safe_ratio,
+    _space_readme,
     _validate_payload,
 )
 
@@ -139,6 +140,12 @@ class HubReleaseTests(unittest.TestCase):
             dict(policy, real_data_distribution_allowed=True), synthetic=True))
         self.assertFalse(public_payload_allowed(
             dict(policy, hub_publication_enabled=False), synthetic=True))
+
+    def test_space_card_uses_hub_supported_colors(self):
+        readme = _space_readme("2024-25", "a" * 40)
+        self.assertIn("colorFrom: blue", readme)
+        self.assertIn("colorTo: indigo", readme)
+        self.assertNotIn("colorTo: orange", readme)
 
     def test_team_dimension_uses_specific_then_common_fallback(self):
         with tempfile.TemporaryDirectory() as folder:

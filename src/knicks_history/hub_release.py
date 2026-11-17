@@ -377,7 +377,7 @@ def _space_readme(season, revision, dataset_id=None):
 title: NYK World
 emoji: 🏀
 colorFrom: blue
-colorTo: orange
+colorTo: indigo
 sdk: static
 app_file: index.html
 pinned: true
