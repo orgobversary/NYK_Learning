@@ -82,7 +82,9 @@ def main():
         combined = root / "passing.csv"; combine_passing(passing_root, combined)
         current = (data_root / "CURRENT").read_text(encoding="utf-8").strip()
         team_release = data_root / "releases" / current
-        input_hash = digest([team_release / "manifest.json", combined])
+        # Release IDs and manifest timestamps change on every build. Hash the
+        # normalized research inputs so a replay with identical rows is a no-op.
+        input_hash = digest([team_release / "team_games.csv", combined])
         latest = registry / "latest-research.json"
         if latest.exists() and json.loads(latest.read_text()).get("input_sha256") == input_hash:
             print("No research input changes; keeping the current preview", flush=True)
