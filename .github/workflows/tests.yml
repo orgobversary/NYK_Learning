@@ -23,3 +23,44 @@ jobs:
           knicks ingest --input fixtures/league-demo.json --synthetic --season 2024-25 --root data/demo
           knicks build --root data/demo --expected config/expected-demo.csv --parquet
           python scripts/stage_release.py data/demo build/demo
+  visualizations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install visualization and browser dependencies
+        run: |
+          python -m pip install -e ".[visualization]"
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Exercise visualization generators with invented data
+        run: |
+          python scripts/build_hf_fixture_preview.py --output build/hf-fixture
+          python scripts/build_passing_lab.py --output build/passing-fixture
+      - name: Validate and serve the synthetic preview
+        run: |
+          python scripts/validate_hf_release.py build/hf-fixture
+          python -m http.server 4173 --bind 127.0.0.1 --directory build/hf-fixture/space &
+          echo $! > /tmp/nyk-preview-server.pid
+          python -m http.server 4174 --bind 127.0.0.1 --directory build/passing-fixture &
+          echo $! > /tmp/nyk-passing-server.pid
+      - name: Browser smoke test every visualization
+        env:
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/node_modules/playwright
+          NYK_SPACE_URL: http://127.0.0.1:4173/
+          NYK_EXPECTED_SEASON: 2024-25
+          NYK_EXPECTED_GAMES: '7'
+          NYK_BROWSER_OUTPUT: build/browser-qa
+        run: node tests/hf_space_browser.cjs
+      - name: Browser smoke test synthetic passing Sankey
+        env:
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/node_modules/playwright
+          NYK_PASSING_URL: http://127.0.0.1:4174/
+        run: node tests/passing_browser.cjs

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>NYK World · {{SEASON}}</title>
+    <link rel="stylesheet" href="styles/app.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#gallery">Skip to visualizations</a>
+    <main>
+      <header class="hero">
+        <p class="eyebrow">NYK World · team-game analytics · {{MODE_LABEL}}</p>
+        <h1>{{SEASON}} regular season</h1>
+        <p class="lede">{{CHART_COUNT}} interactive views generated from a versioned ETL release. Team-level results only—no player data or predictive model.</p>
+        <dl class="metrics" aria-label="Season totals">
+          <div><dt>Games</dt><dd>{{GAME_COUNT}}</dd></div>
+          <div><dt>Wins</dt><dd>{{WINS}}</dd></div>
+          <div><dt>Losses</dt><dd>{{LOSSES}}</dd></div>
+        </dl>
+      </header>
+
+      <section id="gallery" class="gallery" aria-labelledby="gallery-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Interactive gallery</p>
+            <h2 id="gallery-title">Read the season {{CHART_COUNT}} ways</h2>
+          </div>
+          <p id="chart-description">Scoring and prior-five-game form over the season.</p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Choose a visualization">
+          {{CHART_TABS}}
+        </div>
+        <div id="chart-panel" class="chart-panel" role="tabpanel" tabindex="0" aria-labelledby="tab-season-pulse">
+          <iframe id="chart-frame" title="Season pulse interactive chart" src="charts/season-pulse.html" loading="eager"></iframe>
+          <p class="chart-fallback">If the interactive chart does not load, open its <a id="preview-link" href="previews/season-pulse.png">static PNG preview</a>.</p>
+        </div>
+      </section>
+
+      <section class="preview-grid" aria-labelledby="previews-title">
+        <div class="section-heading"><div><p class="eyebrow">Static fallbacks</p><h2 id="previews-title">Portable previews</h2></div></div>
+        {{PREVIEW_CARDS}}
+      </section>
+
+      <footer>
+        <p>Data snapshot <code>{{DATASET_REVISION}}</code></p>
+        <nav aria-label="Project links">
+          {{DATASET_LINK}}
+          <a href="https://github.com/orgobversary/NYK_Learning" target="_blank" rel="noreferrer">ETL source</a>
+        </nav>
+      </footer>
+    </main>
+    <script src="scripts/app.js"></script>
+  </body>
+</html>

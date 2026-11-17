@@ -37,4 +37,10 @@ Recent history uses short, imperative subjects such as `Add Knicks ETL foundatio
 
 ## Data Safety & Configuration
 
-Never commit credentials, `.env` files, virtual environments, raw third-party archives, or generated datasets. Keep synthetic and live roots separate. Document source provenance and redistribution permission before publishing real NBA data, and treat empty API responses as failures requiring investigation rather than evidence of zero games.
+Never commit credentials, `.env` files, virtual environments, raw third-party archives, or generated datasets. Keep synthetic and live roots separate. Real basketball rows, real-data charts, and screenshots stay local under the research-only policy; public Hub artifacts are synthetic demonstrations only. Treat empty API responses as failures requiring investigation rather than evidence of zero games. Read `docs/CHECKPOINT.md` and `docs/RESEARCH_SCOPE.md` before changing data boundaries, Hub publication, or release architecture.
+
+## Current Checkpoint
+
+`docs/CHECKPOINT.md` records the active GitHub/Hugging Face topology, verified commands,
+implemented research domains, publication boundary, and next safe steps. Update it when
+the architecture, remote state, supported seasons, or policy changes materially.

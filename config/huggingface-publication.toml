@@ -1,0 +1,12 @@
+# Real sports data is collected and transformed for local research only. Public
+# Hub artifacts may use code, schemas, and invented fixtures, but must not contain
+# or visualize the real research rows.
+research_only = true
+hub_publication_enabled = true
+real_data_distribution_allowed = false
+synthetic_demo_distribution_allowed = true
+redistribution_reviewed = false
+reviewed_by = ""
+reviewed_at = ""
+basis = "Local research only; no real-data distribution grant is asserted."
+dataset_license = "other"

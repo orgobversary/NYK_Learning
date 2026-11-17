@@ -16,3 +16,4 @@ build/
 dist/
 public/
 .knicks-state/
+.hf-cache/

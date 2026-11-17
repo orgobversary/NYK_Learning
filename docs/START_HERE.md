@@ -87,7 +87,7 @@ knicks build --root data/demo --expected config/expected-demo.csv --parquet
 python -m pip freeze --all --exclude-editable > requirements-local.txt
 ```
 
-All 20 tests should now run without a Parquet skip. Record your Python version alongside the dependency snapshot. The initial Actions workflow uses bounded package requirements, not this local snapshot; migrate CI to a reviewed lockfile after the first working run.
+The full suite should run without a Parquet skip. Record your Python version alongside the dependency snapshot. Actions exercises both the base contracts and the pinned visualization stack.
 
 ## 6. Preview the plain file index
 
@@ -105,7 +105,7 @@ After the fixture works:
 ```bash
 python -m pip install -e '.[live]'
 knicks fetch --season 2024-25 --season-type "Regular Season" --root data/live
-knicks build --root data/live --parquet
+knicks build --root data/live --expected config/expected-live.csv --parquet
 ```
 
 The live adapter is opt-in; no scheduled NBA job is installed. Inspect the source response, run manifest and coverage. Endpoint access and historical accuracy require live verification. Zero rows are not proof of zero games. Keep synthetic and real roots separate.
@@ -129,7 +129,8 @@ First establish a tested public repository. Later, deploy the reviewed static da
 1. Green GitHub Actions checks including Parquet.
 2. One real season reconciled against source evidence.
 3. Historical coverage audit and controlled backfill.
-4. Game-observation records: game ID, observation timestamp, period/game clock, evidence, interpretation and confidence as separate fields.
-5. Leakage-aware features and chronological ML evaluation.
+4. Expand the ignored local research warehouse according to `docs/RESEARCH_SCOPE.md`; do not publish real rows or real-data visualizations.
+5. Game-observation records: game ID, observation timestamp, period/game clock, evidence, interpretation and confidence as separate fields.
+6. Chronological ML evaluation using the leakage-safe pregame feature table.
 
-The observation and ML layers are planned, not implemented in this starter.
+The observation and model-training layers are planned; the pregame feature export deliberately contains no fitted model.

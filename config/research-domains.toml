@@ -1,0 +1,37 @@
+version = 1
+purpose = "local research and portfolio engineering demonstration"
+distribution = "none for real source data"
+
+[domains.team_games]
+grain = "one team per game"
+status = "implemented"
+local_root = "data/live"
+
+[domains.player_box_scores]
+grain = "one player per game"
+status = "planned"
+local_root = "data/research/player_box_scores"
+
+[domains.rosters]
+grain = "one player-team-season interval"
+status = "planned"
+local_root = "data/research/rosters"
+
+[domains.play_by_play]
+grain = "one recorded game event"
+status = "planned"
+local_root = "data/research/play_by_play"
+
+[domains.player_passing]
+grain = "one season-passer-receiver edge"
+status = "contract implemented; authorized local import only"
+local_root = "data/research/player_passing"
+
+[domains.injuries_transactions]
+grain = "one dated player status event"
+status = "planned"
+local_root = "data/research/player_events"
+
+[public_outputs]
+allowed = ["source code", "schemas", "documentation", "invented fixtures", "synthetic demonstrations"]
+blocked = ["real rows", "real-data parquet", "real-data CSV", "real-data interactive charts", "real-data screenshots"]
