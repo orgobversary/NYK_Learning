@@ -19,12 +19,12 @@ local_root = "data/research/rosters"
 
 [domains.play_by_play]
 grain = "one recorded game event"
-status = "planned"
+status = "private assist-network source implemented; full event warehouse planned"
 local_root = "data/research/play_by_play"
 
 [domains.player_passing]
 grain = "one season-passer-receiver edge"
-status = "contract implemented; private NBA Stats research adapter planned"
+status = "observed assist-edge fallback implemented; all-pass NBA Stats adapter retained but source-blocked"
 local_root = "data/research/player_passing"
 
 [domains.injuries_transactions]

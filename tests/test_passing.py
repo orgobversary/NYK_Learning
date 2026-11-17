@@ -5,9 +5,13 @@ import json
 from pathlib import Path
 
 from knicks_history.passing import (
+    ASSIST_FIELDS,
     FIELDS,
+    aggregate_assist_edges,
     aggregate_passing_edges,
+    load_assist_edges,
     load_passing_edges,
+    normalize_assist_events,
     normalize_passes_made,
     participant_ids,
 )
@@ -65,6 +69,66 @@ class PassingLabTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown receiver"):
             normalize_passes_made(payload, "2024-25", "1", {"1": "One", "2": "Two"},
                                   "source", "time", "private research")
+
+    def test_play_by_play_assists_reconcile_and_normalize(self):
+        games = [{"game_id": "0020000001", "ast": "2"}]
+        players = [{"player_id": "1", "name": "One Passer"},
+                   {"player_id": "2", "name": "Two Scorer"}]
+        events = [
+            {"game_id": "0020000001", "team_id": "1610612752", "person_id": "1",
+             "action_type": "Turnover", "description": "Passer Turnover", "shot_value": None},
+            {"game_id": "0020000001", "team_id": "1610612752", "person_id": "2",
+             "action_type": "Made Shot", "description": "Scorer 3PT Shot (Passer 1 AST)",
+             "shot_value": 3},
+            {"game_id": "0020000001", "team_id": "1610612752", "person_id": "2",
+             "action_type": "Made Shot", "description": "Scorer Layup (Passer 2 AST)",
+             "shot_value": 2},
+        ]
+        rows = normalize_assist_events(
+            events, players, games, "2024-25", "https://example.test/events", "time",
+            "private research", "a" * 64)
+        self.assertEqual(rows[0]["assisted_makes"], 2)
+        self.assertEqual(rows[0]["assisted_points"], 5)
+        self.assertEqual(rows[0]["relation_type"], "assisted_made_basket")
+
+    def test_play_by_play_assists_reject_incomplete_reconciliation(self):
+        games = [{"game_id": "0020000001", "ast": "2"}]
+        players = [{"player_id": "1", "name": "One Passer"},
+                   {"player_id": "2", "name": "Two Scorer"}]
+        events = [
+            {"game_id": "0020000001", "team_id": "1610612752", "person_id": "1",
+             "action_type": "Turnover", "description": "Passer Turnover", "shot_value": None},
+            {"game_id": "0020000001", "team_id": "1610612752", "person_id": "2",
+             "action_type": "Made Shot", "description": "Scorer Layup (Passer 1 AST)",
+             "shot_value": 2},
+        ]
+        with self.assertRaisesRegex(ValueError, "does not reconcile"):
+            normalize_assist_events(events, players, games, "2024-25", "source", "time",
+                                    "private research", "b" * 64)
+
+    def test_assist_contract_and_five_season_aggregation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "assists.csv"
+            with path.open("w", newline="", encoding="utf-8") as stream:
+                writer = csv.DictWriter(stream, fieldnames=ASSIST_FIELDS)
+                writer.writeheader()
+                for index, season in enumerate(
+                        ("2021-22", "2022-23", "2023-24", "2024-25", "2025-26"), 1):
+                    writer.writerow({"season": season, "passer_player_id": "1",
+                                     "passer_name": "One", "receiver_player_id": "2",
+                                     "receiver_name": "Two", "games": index,
+                                     "assisted_makes": index, "assisted_points": index * 2,
+                                     "source_url": "https://example.test/events",
+                                     "retrieved_at": "time", "source_sha256": "c" * 64,
+                                     "rights_basis": "private research",
+                                     "relation_type": "assisted_made_basket",
+                                     "synthetic": "false"})
+            rows = load_assist_edges(path)
+            edges, seasons = aggregate_assist_edges(rows)
+        self.assertEqual(len(seasons), 5)
+        self.assertEqual(edges[0]["source"], "Assister · One")
+        self.assertEqual(edges[0]["target"], "Scorer · Two")
+        self.assertEqual(edges[0]["weight"], 15)
 
 
 if __name__ == "__main__":

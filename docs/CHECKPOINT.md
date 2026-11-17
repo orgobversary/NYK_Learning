@@ -15,8 +15,9 @@ checkpoint for future work in this directory.
 
 - Replayable team-game ETL with coverage, checksums, corrections, and Parquet exports.
 - Nine-season team backfill contract and exact per-season coverage checks.
-- Eight team charts, a five-season passing Sankey, and Matplotlib fallbacks.
-- Private NBA Stats passing adapter with pacing, retries, caching, and provenance.
+- Eight team charts, a five-season teammate Sankey, and Matplotlib fallbacks.
+- Private all-pass adapter plus a documented play-by-play assist fallback with exact
+  reconciliation, stable player IDs, source hashes, and explicit relation semantics.
 - Interpretable win and margin models with time-aware validation, dummy baselines,
   uncertainty intervals, model cards, coefficients, and predictions.
 - Six-chapter dark story UI, closed manifests, responsive browser checks, immutable
@@ -27,11 +28,12 @@ checkpoint for future work in this directory.
 
 ## Live Source Status
 
-The nine-season team import and coverage build succeeded locally and in an HF Job. The
-NBA Stats passing endpoint timed out after all retries in both environments before any
-edge file was created. The installed Monday schedule is suspended, no private release
-pointer was promoted, and the existing private Space has not been replaced with a mixed
-real/synthetic story. Resume only after an authorized passing source passes validation.
+The NBA Stats all-pass endpoint timed out in both environments, but the documented
+third-party historical archive supplies play-by-play-derived game events. Five seasons of
+observed assister-to-scorer edges now reconcile exactly to team-assist totals: 1,793,
+1,880, 1,998, 2,254, and 2,250. A 712-game local research preview with 935 season-edge
+rows, 10,175 assisted makes, and the trained model passed closed-manifest and browser QA.
+The schedule remains suspended until this fallback passes the same end-to-end HF Job.
 
 ## Research Boundary
 

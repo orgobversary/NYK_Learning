@@ -3,6 +3,7 @@ import csv
 import hashlib
 import json
 import re
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -17,7 +18,14 @@ RESEARCH_FIELDS = (
     "fg3m", "fg3a", "source_url", "retrieved_at", "source_sha256",
     "rights_basis", "synthetic",
 )
+ASSIST_FIELDS = (
+    "season", "passer_player_id", "passer_name", "receiver_player_id",
+    "receiver_name", "games", "assisted_makes", "assisted_points",
+    "source_url", "retrieved_at", "source_sha256", "rights_basis",
+    "relation_type", "synthetic",
+)
 SEASON = re.compile(r"20\d{2}-\d{2}")
+ASSIST_DESCRIPTION = re.compile(r"\((.+?) \d+ AST\)$")
 
 
 def _boolean(value):
@@ -88,6 +96,28 @@ def aggregate_passing_edges(rows, top_players=12, top_edges=40):
     return [{"source": f"Passer · {names[pair[0]]}",
              "target": f"Receiver · {names[pair[1]]}", "weight": passes}
             for pair, passes in edges[:top_edges]], seasons
+
+
+def aggregate_assist_edges(rows, top_players=12, top_edges=40):
+    """Aggregate five seasons of observed assister-to-scorer connections."""
+    seasons = sorted({row["season"] for row in rows})
+    if len(seasons) != 5:
+        raise ValueError(f"The assist network requires exactly five seasons, found {len(seasons)}")
+    totals, names, volume = defaultdict(int), {}, defaultdict(int)
+    for row in rows:
+        passer, receiver = row["passer_player_id"], row["receiver_player_id"]
+        names[passer], names[receiver] = row["passer_name"], row["receiver_name"]
+        totals[(passer, receiver)] += row["assisted_makes"]
+        volume[passer] += row["assisted_makes"]
+        volume[receiver] += row["assisted_makes"]
+    players = {player for player, _ in sorted(
+        volume.items(), key=lambda item: (-item[1], item[0]))[:top_players]}
+    edges = [(pair, count) for pair, count in totals.items()
+             if pair[0] in players and pair[1] in players]
+    edges.sort(key=lambda item: (-item[1], names[item[0][0]], names[item[0][1]]))
+    return [{"source": f"Assister · {names[pair[0]]}",
+             "target": f"Scorer · {names[pair[1]]}", "weight": count}
+            for pair, count in edges[:top_edges]], seasons
 
 
 def response_dataset(payload, name):
@@ -193,3 +223,121 @@ def load_research_edges(path):
     if not normalized:
         raise ValueError("Research passing CSV is empty")
     return normalized
+
+
+def load_assist_edges(path):
+    """Load a closed observed-assist edge contract."""
+    with Path(path).open(newline="", encoding="utf-8") as stream:
+        reader = csv.DictReader(stream)
+        if tuple(reader.fieldnames or ()) != ASSIST_FIELDS:
+            raise ValueError("Assist-network CSV does not match schema version 1")
+        rows = list(reader)
+    normalized, seen = [], set()
+    for number, item in enumerate(rows, 2):
+        item = dict(item)
+        if not SEASON.fullmatch(item["season"]):
+            raise ValueError(f"Row {number} has an invalid season")
+        for field in ("passer_player_id", "receiver_player_id"):
+            if not item[field].isdigit():
+                raise ValueError(f"Row {number} player IDs must be digit strings")
+        if item["passer_player_id"] == item["receiver_player_id"]:
+            raise ValueError(f"Row {number} is a self-edge")
+        key = (item["season"], item["passer_player_id"], item["receiver_player_id"])
+        if key in seen:
+            raise ValueError(f"Duplicate assist edge: {key}")
+        seen.add(key)
+        for field in ("games", "assisted_makes", "assisted_points"):
+            item[field] = _count(item[field], field)
+        if not 0 < item["games"] <= item["assisted_makes"]:
+            raise ValueError(f"Row {number} has inconsistent game and assist counts")
+        if not 2 * item["assisted_makes"] <= item["assisted_points"] <= 3 * item["assisted_makes"]:
+            raise ValueError(f"Row {number} has inconsistent assisted points")
+        if item["relation_type"] != "assisted_made_basket":
+            raise ValueError(f"Row {number} has an unsupported relation type")
+        if not item["source_url"].strip() or not item["rights_basis"].strip():
+            raise ValueError(f"Row {number} requires source_url and rights_basis")
+        if not re.fullmatch(r"[0-9a-f]{64}", item["source_sha256"]):
+            raise ValueError(f"Row {number} requires a SHA-256 source digest")
+        item["synthetic"] = _boolean(item["synthetic"])
+        if item["synthetic"]:
+            raise ValueError(f"Row {number} assist fallback must be observed")
+        normalized.append(item)
+    if not normalized:
+        raise ValueError("Assist-network CSV is empty")
+    return normalized
+
+
+def _name_key(value):
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode().lower()
+    words = re.findall(r"[a-z0-9]+", value)
+    while words and words[-1] in {"jr", "sr", "ii", "iii", "iv"}:
+        words.pop()
+    return words[-1] if words else ""
+
+
+def normalize_assist_events(events, players, team_games, season, source_url,
+                            retrieved_at, rights_basis, source_sha256,
+                            team_id="1610612752"):
+    """Convert official play-by-play descriptions into verified assist edges."""
+    if not SEASON.fullmatch(season):
+        raise ValueError("Invalid assist-network season")
+    if not rights_basis.strip() or not re.fullmatch(r"[0-9a-f]{64}", source_sha256):
+        raise ValueError("Assist-network provenance is incomplete")
+    selected = {str(row["game_id"]): _count(row["ast"], "ast") for row in team_games}
+    if not selected:
+        raise ValueError("No team games were selected")
+    event_games = {str(row["game_id"]) for row in events if str(row.get("game_id")) in selected}
+    if event_games != set(selected):
+        missing = sorted(set(selected) - event_games)
+        raise ValueError(f"Play-by-play is missing selected games: {missing[:3]}")
+    participant_ids = {str(row["person_id"]) for row in events
+                       if str(row.get("game_id")) in selected
+                       and str(row.get("team_id")) == str(team_id)
+                       and row.get("person_id") not in (None, "")}
+    names = {str(row["player_id"]): str(row["name"]).strip() for row in players
+             if str(row["player_id"]) in participant_ids}
+    by_name = defaultdict(list)
+    for player_id, name in names.items():
+        by_name[_name_key(name)].append(player_id)
+    aggregates, observed = {}, 0
+    for row in events:
+        if (str(row.get("game_id")) not in selected
+                or str(row.get("team_id")) != str(team_id)
+                or row.get("action_type") != "Made Shot"):
+            continue
+        match = ASSIST_DESCRIPTION.search(str(row.get("description") or ""))
+        if not match:
+            continue
+        scorer = str(row.get("person_id"))
+        if scorer not in names:
+            raise ValueError(f"Unknown scorer in game {row.get('game_id')}")
+        candidates = by_name.get(_name_key(match.group(1)), [])
+        if len(candidates) != 1:
+            raise ValueError(f"Assister name is not uniquely resolved: {match.group(1)}")
+        assister = candidates[0]
+        if assister == scorer:
+            raise ValueError("Assist event resolved to a self-edge")
+        points = _count(row.get("shot_value"), "shot_value")
+        if points not in (2, 3):
+            raise ValueError("Assisted made basket must be worth two or three points")
+        key = (assister, scorer)
+        value = aggregates.setdefault(key, {"games": set(), "assisted_makes": 0,
+                                            "assisted_points": 0})
+        value["games"].add(str(row["game_id"]))
+        value["assisted_makes"] += 1
+        value["assisted_points"] += points
+        observed += 1
+    expected = sum(selected.values())
+    if observed != expected:
+        raise ValueError(f"Assist-event count {observed} does not reconcile with team total {expected}")
+    output = []
+    for (assister, scorer), value in sorted(aggregates.items()):
+        output.append({"season": season, "passer_player_id": assister,
+                       "passer_name": names[assister], "receiver_player_id": scorer,
+                       "receiver_name": names[scorer], "games": len(value["games"]),
+                       "assisted_makes": value["assisted_makes"],
+                       "assisted_points": value["assisted_points"],
+                       "source_url": source_url, "retrieved_at": retrieved_at,
+                       "source_sha256": source_sha256, "rights_basis": rights_basis,
+                       "relation_type": "assisted_made_basket", "synthetic": False})
+    return output

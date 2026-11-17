@@ -17,7 +17,7 @@ The current implementation is a **versioned basketball research system**:
 - Join Knicks games to opponent scores.
 - Build versioned CSV, SQLite and optional Parquet releases.
 - Track season coverage and retain old snapshots when corrections arrive.
-- Normalize private five-season player-passing edges with raw-response caching.
+- Normalize private five-season teammate edges from all-pass tracking or reconciled assists.
 - Train interpretable win-probability and margin models with chronological backtests.
 - Build a six-chapter, iframe-ready D3Blocks and Matplotlib research story.
 - Test with invented games and mocked endpoints before live access.
@@ -77,16 +77,20 @@ The source uses the season ending year (`2018` means `2017-18`). The importer fi
 
 ## Local research warehouse and public demonstrations
 
-The research builder turns immutable seasons and normalized passing edges into Parquet
-tables, eight team views, a passing Sankey, a model lab, and static fallbacks. Real rows
+The research builder turns immutable seasons and normalized teammate edges into Parquet
+tables, eight team views, a relationship Sankey, a model lab, and static fallbacks. Real rows
 and derived artifacts are private research material. For an authorized local build:
 
 ```bash
 python -m pip install -e '.[research,visualization]'
-python scripts/fetch_passing.py --season 2025-26 \
-  --root data/research/player_passing --rights-basis '<documented private-research basis>'
-python scripts/build_hf_release.py --root data/live --season 2025-26 \
-  --passing data/research/player_passing/edges/2025-26.csv \
+python scripts/fetch_assist_network.py \
+  --season 2021-22 --season 2022-23 --season 2023-24 \
+  --season 2024-25 --season 2025-26 --root data/research/player_passing \
+  --rights-basis '<documented private-research basis>'
+python scripts/build_hf_release.py --root data/live \
+  --season 2021-22 --season 2022-23 --season 2023-24 \
+  --season 2024-25 --season 2025-26 \
+  --passing data/research/player_passing/assist_edges/five-season.csv \
   --output build/huggingface --allow-dirty
 python scripts/validate_hf_release.py build/huggingface
 python -m http.server 8000 --directory build/huggingface/space
@@ -98,8 +102,9 @@ only in the named private Space. Public promotion is disabled and requires a sep
 source-specific rights review. See the [research scope](docs/RESEARCH_SCOPE.md) and
 [Hugging Face guide](huggingface/README.md).
 
-The standalone passing lab still defaults to invented data so its contract and Sankey
-can be reviewed without network access or private rows.
+The standalone passing lab still defaults to invented all-pass data. The observed fallback
+is explicitly typed `assisted_made_basket`: it visualizes assister-to-scorer connections,
+not every pass, and reconciles each season to the validated team-assist total.
 
 ## License
 
