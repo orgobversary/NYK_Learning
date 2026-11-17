@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   fixture:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container: python:3.11-slim-bookworm
     steps:
       - uses: actions/checkout@v6
@@ -24,7 +24,7 @@ jobs:
           knicks build --root data/demo --expected config/expected-demo.csv --parquet
           python scripts/stage_release.py data/demo build/demo
   visualizations:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
