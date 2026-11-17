@@ -33,7 +33,9 @@ third-party historical archive supplies play-by-play-derived game events. Five s
 observed assister-to-scorer edges now reconcile exactly to team-assist totals: 1,793,
 1,880, 1,998, 2,254, and 2,250. A 712-game local research preview with 935 season-edge
 rows, 10,175 assisted makes, and the trained model passed closed-manifest and browser QA.
-The schedule remains suspended until this fallback passes the same end-to-end HF Job.
+The same fallback then completed end to end in Hugging Face Jobs. The promoted private
+release is `20261117T215020Z-3a950058`; a repeated run proved the semantic no-change path,
+and the Monday schedule is active.
 
 ## Research Boundary
 
