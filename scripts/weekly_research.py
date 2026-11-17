@@ -31,10 +31,18 @@ def run(command, cwd=None):
     subprocess.run(command, cwd=cwd, check=True)
 
 
-def digest(paths):
+def research_input_digest(team_games, passing):
+    """Hash normalized facts while ignoring a timestamp-only source refresh."""
     value = hashlib.sha256()
-    for path in sorted(map(Path, paths)):
-        value.update(path.name.encode()); value.update(path.read_bytes())
+    team_games, passing = Path(team_games), Path(passing)
+    value.update(team_games.name.encode()); value.update(team_games.read_bytes())
+    with passing.open(newline="", encoding="utf-8") as stream:
+        reader = csv.DictReader(stream)
+        if "retrieved_at" not in (reader.fieldnames or ()):
+            raise ValueError("Passing contract requires retrieved_at")
+        for row in reader:
+            row.pop("retrieved_at")
+            value.update(json.dumps(row, sort_keys=True, separators=(",", ":")).encode())
     return value.hexdigest()
 
 
@@ -84,7 +92,7 @@ def main():
         team_release = data_root / "releases" / current
         # Release IDs and manifest timestamps change on every build. Hash the
         # normalized research inputs so a replay with identical rows is a no-op.
-        input_hash = digest([team_release / "team_games.csv", combined])
+        input_hash = research_input_digest(team_release / "team_games.csv", combined)
         latest = registry / "latest-research.json"
         if latest.exists() and json.loads(latest.read_text()).get("input_sha256") == input_hash:
             print("No research input changes; keeping the current preview", flush=True)

@@ -34,8 +34,10 @@ closed-manifest validation, chronological modeling, story generation, payload va
 and private Space upload before replacing `registry/latest-research.json` and
 `registry/latest-preview.json` through temporary files. A failure before promotion leaves
 both pointers unchanged; operators must compare both pointers after any interrupted job.
-The no-change gate hashes normalized `team_games.csv` rows and the combined assist-edge
-contract; release IDs and build timestamps are intentionally excluded.
+The no-change gate hashes normalized `team_games.csv` rows and the semantic fields in the
+combined assist-edge contract. Release IDs, build timestamps, and the per-fetch
+`retrieved_at` value are intentionally excluded; edge values, source hashes, relation
+types, and rights metadata remain inside the digest.
 
 Run a manual Job first, repeat it to prove the no-change path, and test rollback to the
 previous Space commit before enabling the schedule. Public visibility remains a separate
