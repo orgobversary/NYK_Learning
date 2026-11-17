@@ -8,11 +8,14 @@ from knicks_history.hub_release import (
     _synthetic_dataset_readme,
     _generate_d3,
     _generate_previews,
+    _generate_model_chapter,
+    _generate_passing_chapter,
     _space_index,
     _space_readme,
     _write_json,
     _write_parquet,
     _write_payload_manifest,
+    _write_story_manifest,
     build_monthly_summary,
     build_pregame_features,
     build_result_paths,
@@ -100,6 +103,10 @@ def main():
         _space_readme("2024-25", args.dataset_revision, dataset_id), encoding="utf-8")
     _generate_d3(games, features, monthly, build_result_paths(games), space / "charts")
     _generate_previews(games, features, monthly, space / "previews")
+    passing = _generate_passing_chapter(Path("fixtures/passing-demo.csv"),
+                                        space / "charts", space / "previews")
+    model = _generate_model_chapter(games, features, None, space / "charts", space / "previews")
+    _write_story_manifest(space, "2024-25", args.dataset_revision, passing, model, True)
     (space / "index.html").write_text(
         _space_index(template, "2024-25", args.dataset_revision, games,
                      "SYNTHETIC DEMONSTRATION", dataset_id),

@@ -1,13 +1,12 @@
-# NYK World local research and synthetic Hub demonstrations
+# NYK World research and Hub operations
 
-Maintained source for local research visualizations and synthetic Hugging Face
-demonstrations lives here. Generated real-data Parquet, HTML, PNG, contracts, and
-manifests belong under ignored `build/`; raw responses and local databases are never
-uploaded. The repository does not publish a real-data Hugging Face dataset.
+Maintained source for synthetic demonstrations and authenticated private research
+previews lives here. Real-data Parquet, HTML, PNG, models, and manifests belong under
+ignored `build/` or in the approved private research Bucket. Raw research is never put
+in Git or the synthetic Hugging Face dataset repository.
 
-The local gallery produces eight coordinated views: season pulse, monthly fingerprint, game
-profiles, result paths, opponent map, margin shape, opponent share, and matchup grid.
-Every interactive D3Blocks artifact has a Matplotlib PNG fallback.
+The story produces eight coordinated team views, a five-season passing Sankey, a model
+lab, and a methods chapter. Interactive D3Blocks artifacts have portable static fallbacks.
 
 ## Fast local review
 
@@ -33,25 +32,27 @@ make passing-lab PASSING_PREVIEW=build/passing-review-001
 python -m http.server 8001 --bind 127.0.0.1 --directory build/passing-review-001
 ```
 
-For an authorized local research export, preserve the exact CSV columns and run
+For an authorized research export, preserve the exact CSV columns and run
 `python scripts/build_passing_lab.py --input path/to/export.csv --output build/passing-authorized --allow-authorized-real-data`.
-The file must include a source URL and research basis on every row. The resulting HTML,
-PNG, metadata, and source rows remain local and ignored; they are not Hub artifacts.
+The file must include a source URL and research basis on every row. The result remains
+private and must follow `config/huggingface-publication.toml`.
 
 ## Recreate the source release
 
 Use Python 3.11–3.13 for the pinned visualization stack:
 
 ```bash
-python -m pip install -e '.[visualization]'
+python -m pip install -e '.[research,visualization]'
 python scripts/import_team_logs.py --start 2026 --end 2026 --root data/live
 knicks build --root data/live --expected config/expected-live.csv --parquet
 ```
 
-For a local 2025–26 review build:
+For a local 2025–26 review build, first create or obtain an authorized normalized passing
+CSV, then supply it explicitly:
 
 ```bash
 python scripts/build_hf_release.py --root data/live --season 2025-26 \
+  --passing data/research/player_passing/edges/2025-26.csv \
   --output build/huggingface --allow-dirty
 python scripts/validate_hf_release.py build/huggingface
 python -m http.server 8000 --bind 127.0.0.1 --directory build/huggingface/space
@@ -67,14 +68,30 @@ must have `count_matches` coverage. A reviewed `config/teams/<season>.csv` takes
 precedence; otherwise the builder uses `config/teams/common.csv`. `--space-season`
 chooses the single season displayed by the local gallery.
 
+## Private research deployment
+
+Stage a closed release only from a clean checkout, dry-run its Bucket sync, then execute
+the upload after reviewing the manifest:
+
+```bash
+python scripts/stage_research_release.py --team-release data/live/releases/<id> \
+  --passing data/research/player_passing --models build/models \
+  --space build/huggingface/space --output-root build/research-staging
+python scripts/sync_research_bucket.py --release build/research-staging/<id>
+python scripts/sync_research_bucket.py --release build/research-staging/<id> --execute
+```
+
+The Bucket uses immutable `releases/<id>/` objects plus small verified registry pointers.
+The private Space is the presentation tier, not the system of record. Weekly behavior,
+credentials, rollback, and scheduling are documented in
+[`docs/WEEKLY_RESEARCH.md`](../docs/WEEKLY_RESEARCH.md).
+
 ## Public boundary
 
-`config/huggingface-publication.toml` encodes a synthetic-only Hub policy. The
-publisher independently reloads that policy and blocks real dataset or real-chart
-payloads even if a generated manifest is edited. The real-data builder also marks its
-payloads `local_research_only` and non-publishable. Synthetic fixture payloads can be
-published only from a clean Git checkout with `--publishable`; the generated dataset
-and Space identify themselves as invented demonstrations.
+`config/huggingface-publication.toml` separates synthetic publication from private real
+research. The synthetic publisher blocks real rows and charts. The private research
+sync accepts only closed, non-synthetic, non-public releases for the named private
+Bucket. Automatic public promotion is disabled.
 
 The synthetic Hub checkpoint uses two phases. First build and upload the dataset:
 

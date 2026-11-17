@@ -10,16 +10,21 @@ A Knicks data-engineering and ML learning project: historical statistics, struct
 
 ## Current milestone
 
-The first implementation is a **team-game ETL foundation**:
+The current implementation is a **versioned basketball research system**:
 
 - Preserve raw JSON responses and SHA-256 hashes.
 - Validate game identifiers, counts, scores and source schemas.
 - Join Knicks games to opponent scores.
 - Build versioned CSV, SQLite and optional Parquet releases.
 - Track season coverage and retain old snapshots when corrections arrive.
-- Test the workflow with invented games before contacting a live API.
+- Normalize private five-season player-passing edges with raw-response caching.
+- Train interpretable win-probability and margin models with chronological backtests.
+- Build a six-chapter, iframe-ready D3Blocks and Matplotlib research story.
+- Test with invented games and mocked endpoints before live access.
 
-No real historical dataset is included. The sample games are synthetic, not actual Knicks results. Player history, game-observation ingestion and ML experiments are later milestones.
+No real historical dataset is included in Git. Fixtures and the reproducible public demo
+are synthetic; authorized real rows, models, and visual artifacts stay in private
+research storage and a private preview Space.
 
 ## Start here
 
@@ -42,12 +47,12 @@ Install `python -m pip install -e '.[columnar]'` and add `--parquet` to the buil
 
 | Directory | Purpose |
 |---|---|
-| `src/knicks_history` | CLI, source adapter, validation and dataset builds |
+| `src/knicks_history` | ETL, validation, passing contracts, research storage, and models |
 | `fixtures` | Explicitly synthetic teaching data |
 | `tests` | Replay, corrections, nulls, integrity and failure tests |
 | `config` | Expected fixture counts and historical review checklist |
 | `sql` | Consumer queries and lagged feature example |
-| `scripts` | Sequential backfill, alternate source import and release staging |
+| `scripts` | Backfill, passing fetch, model training, release staging, and weekly orchestration |
 | `huggingface` | Maintained dataset-card and static-Space source |
 | `docs` | Setup and dataset card |
 | `data` | Generated local snapshots/releases; ignored by Git |
@@ -72,28 +77,29 @@ The source uses the season ending year (`2018` means `2017-18`). The importer fi
 
 ## Local research warehouse and public demonstrations
 
-The research builder turns one or more immutable local seasons into local Parquet
-tables, eight standalone D3Blocks charts, and eight Matplotlib fallbacks. Real rows and
-real-data charts are research artifacts and are not published. For a local 2025–26
-review build:
+The research builder turns immutable seasons and normalized passing edges into Parquet
+tables, eight team views, a passing Sankey, a model lab, and static fallbacks. Real rows
+and derived artifacts are private research material. For an authorized local build:
 
 ```bash
-python -m pip install -e '.[visualization]'
+python -m pip install -e '.[research,visualization]'
+python scripts/fetch_passing.py --season 2025-26 \
+  --root data/research/player_passing --rights-basis '<documented private-research basis>'
 python scripts/build_hf_release.py --root data/live --season 2025-26 \
+  --passing data/research/player_passing/edges/2025-26.csv \
   --output build/huggingface --allow-dirty
 python scripts/validate_hf_release.py build/huggingface
 python -m http.server 8000 --directory build/huggingface/space
 ```
 
-Generated `data/` and `build/` content stays ignored. Read the
-[research scope](docs/RESEARCH_SCOPE.md) and [Hugging Face guide](huggingface/README.md):
-the checked-in policy prohibits uploading real rows, real-data charts, or screenshots.
-Public Hub work is limited to schemas, documentation, invented fixtures, and synthetic
-demonstrations.
+Generated `data/` and `build/` content stays ignored. The checked-in policy permits real
+research releases only in the named private Hugging Face Bucket and real-data rendering
+only in the named private Space. Public promotion is disabled and requires a separate,
+source-specific rights review. See the [research scope](docs/RESEARCH_SCOPE.md) and
+[Hugging Face guide](huggingface/README.md).
 
-A separate five-season player-passing methods lab uses only an invented fixture by
-default. It demonstrates the future CSV contract and Sankey without presenting
-synthetic identities as real players or mixing player data into the Hub payload.
+The standalone passing lab still defaults to invented data so its contract and Sankey
+can be reviewed without network access or private rows.
 
 ## License
 

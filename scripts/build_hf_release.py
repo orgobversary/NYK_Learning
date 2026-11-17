@@ -17,13 +17,18 @@ def main():
     parser.add_argument("--gate", type=Path, default=Path("config/huggingface-publication.toml"))
     parser.add_argument("--space-source", type=Path, default=Path("huggingface/space"))
     parser.add_argument("--dataset-revision", default="LOCAL_PREVIEW")
+    parser.add_argument("--passing", type=Path,
+                        help="required normalized passing CSV for a real research release")
+    parser.add_argument("--model-dir", type=Path,
+                        help="directory produced by scripts/train_models.py")
     parser.add_argument("--allow-dirty", action="store_true",
                         help="build a non-publishable local preview from a dirty source release")
     args = parser.parse_args()
     seasons = args.seasons or ["2025-26"]
     manifest = build_hub_release(args.root, seasons, args.output, args.teams_dir, args.gate,
                                  args.space_source, args.dataset_revision,
-                                 args.space_season, args.allow_dirty)
+                                 args.space_season, args.allow_dirty,
+                                 passing_path=args.passing, model_dir=args.model_dir)
     print(json.dumps(manifest, indent=2))
 
 

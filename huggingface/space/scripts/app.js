@@ -29,7 +29,17 @@ tabs.forEach((tab, index) => {
     if (event.key === 'ArrowRight') target = (index + 1) % tabs.length;
     if (event.key === 'Home') target = 0;
     if (event.key === 'End') target = tabs.length - 1;
-    tabs[target].focus();
-    selectTab(tabs[target]);
+    tabs[target].focus(); selectTab(tabs[target]);
   });
 });
+
+const railLinks = [...document.querySelectorAll('.story-rail a')];
+const chapters = [...document.querySelectorAll('[data-chapter]')];
+const observer = new IntersectionObserver((entries) => {
+  const active = entries.filter((entry) => entry.isIntersecting)
+    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+  if (!active) return;
+  railLinks.forEach((link) => link.setAttribute('aria-current',
+    String(link.hash === `#${active.target.id}`)));
+}, { rootMargin: '-25% 0px -55%', threshold: [0, .25, .5] });
+chapters.forEach((chapter) => observer.observe(chapter));

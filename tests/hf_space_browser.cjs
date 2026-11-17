@@ -27,10 +27,18 @@ async function inspectPage(page, label) {
   });
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
   await page.locator('h1').waitFor();
-  assert.match(await page.locator('h1').innerText(), new RegExp(`${expectedSeason} regular season`));
+  assert.match(await page.locator('h1').innerText(), /signal beneath the season/i);
+  assert.match(await page.locator('.season-lockup').innerText(), new RegExp(expectedSeason));
   const tabs = page.locator('[role="tab"]');
   assert.equal(await tabs.count(), 8);
   assert.match(await page.locator('.metrics').innerText(), new RegExp(expectedGames));
+  assert.equal(await page.locator('.story-rail a').count(), 6);
+  await page.getByRole('heading', { name: /The ball reveals the network/ }).waitFor();
+  await page.getByRole('heading', { name: /Prediction, with the lights on/ }).waitFor();
+
+  const story = await page.evaluate(async () => (await fetch('story-manifest.json')).json());
+  assert.equal(story.chapters.length, 6);
+  assert.equal(story.synthetic, true);
 
   const frame = page.locator('#chart-frame');
   await frame.waitFor();
@@ -55,6 +63,12 @@ async function inspectPage(page, label) {
   assert.match(await frame.getAttribute('src'), /matchup-grid\.html/);
   const provenance = page.getByRole('link', { name: /(?:Build manifest|Synthetic dataset and provenance)/ });
   assert.ok(await provenance.getAttribute('href'));
+  for (const source of ['passing-lanes.html', 'model-signal.html']) {
+    const feature = page.locator(`.feature-frame iframe[src$="${source}"]`);
+    await feature.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    assert.ok((await feature.contentFrame().locator('body').innerText()).length > 0);
+  }
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   assert.equal(overflow, false, `${label} viewport has horizontal overflow`);
