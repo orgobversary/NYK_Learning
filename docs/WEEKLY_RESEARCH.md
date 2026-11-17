@@ -12,9 +12,9 @@ creating a release when the validated team and passing inputs are unchanged.
 - Hardware: `cpu-basic`; timeout 45 minutes; two attempts; concurrency disabled
 - Script: `scripts/weekly_research.py` at a pinned Git revision
 
-The job mounts the private Bucket at `/research` and receives `HF_TOKEN` as a scoped
-write secret. Never place the token in a command argument, repository file, manifest,
-or Space variable.
+The job mounts the private Bucket at `/research`, bootstraps the cloned project with
+`uv pip`, and receives `HF_TOKEN` as a scoped write secret. Never place the token in a
+command argument, repository file, manifest, or Space variable.
 
 ## Promotion gates
 

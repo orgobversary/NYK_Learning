@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.13,<3.14"
-# dependencies = []
+# dependencies = ["huggingface-hub>=1.1,<2"]
 # ///
 """Weekly private research orchestration for a Bucket-mounted Hugging Face Job."""
 import csv
@@ -66,7 +66,8 @@ def main():
         root = Path(folder)
         repo = root / "repo"
         run(["git", "clone", "--depth", "1", "--branch", REPO_REF, REPO_URL, str(repo)])
-        run([sys.executable, "-m", "pip", "install", "-e", ".[research,visualization]"], repo)
+        run(["uv", "pip", "install", "--python", sys.executable,
+             "-e", ".[research,visualization]"], repo)
         run([sys.executable, "scripts/import_team_logs.py", "--start", "2018", "--end", "2026",
              "--root", str(data_root)], repo)
         run([sys.executable, "-m", "knicks_history.cli", "build", "--root", str(data_root),
