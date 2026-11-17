@@ -4,6 +4,15 @@ The weekly job refreshes private research artifacts and the authenticated previe
 does not publish the Bucket, dataset, Space, or real rows publicly. The job exits without
 creating a release when the validated team and passing inputs are unchanged.
 
+## Current operational status
+
+The schedule is installed but **suspended**. On 2026-11-17, both the local runtime and a
+manual Hugging Face Job exhausted three 45-second attempts against the NBA Stats
+participant endpoint before any passing rows were normalized. Team ingestion and exact
+coverage validation succeeded in both environments. Keep the schedule suspended until
+the passing source succeeds or a separately authorized export is imported and validated;
+do not replace the missing observed network with synthetic edges in a real preview.
+
 ## Infrastructure
 
 - Bucket: `obversarystudios/nyk-world-research` (private, US)
@@ -11,6 +20,7 @@ creating a release when the validated team and passing inputs are unchanged.
 - Schedule: Monday at `11:00 UTC`
 - Hardware: `cpu-basic`; timeout 45 minutes; two attempts; concurrency disabled
 - Script: `scripts/weekly_research.py` at a pinned Git revision
+- Installed schedule ID: `obversarystudios/6afcbf87884144d2f44f81bd` (suspended)
 
 The job mounts the private Bucket at `/research`, bootstraps the cloned project with
 `uv pip`, and receives `HF_TOKEN` as a scoped write secret. Never place the token in a

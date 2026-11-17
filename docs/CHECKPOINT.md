@@ -21,6 +21,17 @@ checkpoint for future work in this directory.
   uncertainty intervals, model cards, coefficients, and predictions.
 - Six-chapter dark story UI, closed manifests, responsive browser checks, immutable
   private release staging, Bucket sync, and weekly HF Job orchestration.
+- Local chronological team models trained successfully on 436 train, 77 validation, and
+  154 test rows. Treat the weak held-out results as an honest baseline, not a claim of
+  predictive advantage.
+
+## Live Source Status
+
+The nine-season team import and coverage build succeeded locally and in an HF Job. The
+NBA Stats passing endpoint timed out after all retries in both environments before any
+edge file was created. The installed Monday schedule is suspended, no private release
+pointer was promoted, and the existing private Space has not been replaced with a mixed
+real/synthetic story. Resume only after an authorized passing source passes validation.
 
 ## Research Boundary
 
