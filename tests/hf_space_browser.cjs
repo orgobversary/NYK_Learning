@@ -11,6 +11,7 @@ const baseUrl = process.env.NYK_SPACE_URL || 'http://127.0.0.1:4173/';
 const output = process.env.NYK_BROWSER_OUTPUT || 'build/browser-qa';
 const expectedSeason = process.env.NYK_EXPECTED_SEASON || '2025-26';
 const expectedGames = process.env.NYK_EXPECTED_GAMES || '82';
+const expectedSynthetic = (process.env.NYK_EXPECTED_SYNTHETIC || 'true') === 'true';
 fs.mkdirSync(output, { recursive: true });
 
 async function inspectPage(page, label) {
@@ -38,7 +39,7 @@ async function inspectPage(page, label) {
 
   const story = await page.evaluate(async () => (await fetch('story-manifest.json')).json());
   assert.equal(story.chapters.length, 6);
-  assert.equal(story.synthetic, true);
+  assert.equal(story.synthetic, expectedSynthetic);
 
   const frame = page.locator('#chart-frame');
   await frame.waitFor();

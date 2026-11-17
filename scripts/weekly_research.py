@@ -38,11 +38,11 @@ def digest(paths):
     return value.hexdigest()
 
 
-def combine_passing(root, output):
+def combine_passing(root, output, directory="assist_edges"):
     rows = []
     fields = None
     for season in PASSING_SEASONS:
-        path = root / "edges" / f"{season}.csv"
+        path = root / directory / f"{season}.csv"
         with path.open(newline="", encoding="utf-8") as stream:
             reader = csv.DictReader(stream)
             fields = fields or reader.fieldnames
@@ -73,10 +73,12 @@ def main():
         run([sys.executable, "-m", "knicks_history.cli", "build", "--root", str(data_root),
              "--expected", "config/expected-live.csv", "--parquet"], repo)
         for season in PASSING_SEASONS:
-            if season != PASSING_SEASONS[-1] and (passing_root / "edges" / f"{season}.csv").exists():
+            path = passing_root / "assist_edges" / f"{season}.csv"
+            if season != PASSING_SEASONS[-1] and path.exists():
                 continue
-            run([sys.executable, "scripts/fetch_passing.py", "--season", season,
-                 "--root", str(passing_root), "--rights-basis", RIGHTS_BASIS], repo)
+            run([sys.executable, "scripts/fetch_assist_network.py", "--season", season,
+                 "--root", str(passing_root), "--team-root", str(data_root),
+                 "--rights-basis", RIGHTS_BASIS], repo)
         combined = root / "passing.csv"; combine_passing(passing_root, combined)
         current = (data_root / "CURRENT").read_text(encoding="utf-8").strip()
         team_release = data_root / "releases" / current
@@ -119,11 +121,14 @@ def main():
         pointer = {"release_id": release.name, "input_sha256": input_hash,
                    "builder_git_sha": json.loads((release / "research-manifest.json").read_text())["builder_git_sha"],
                    "space_id": SPACE_ID, "promoted_at": datetime.now(timezone.utc).isoformat()}
-        temporary = registry / ".latest-research.tmp"
-        temporary.write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")
-        temporary.replace(latest)
-        (registry / "latest-preview.json").write_text(json.dumps(pointer, indent=2) + "\n",
-                                                        encoding="utf-8")
+        payload = json.dumps(pointer, indent=2) + "\n"
+        preview = registry / "latest-preview.json"
+        research_temporary = registry / ".latest-research.tmp"
+        preview_temporary = registry / ".latest-preview.tmp"
+        research_temporary.write_text(payload, encoding="utf-8")
+        preview_temporary.write_text(payload, encoding="utf-8")
+        research_temporary.replace(latest)
+        preview_temporary.replace(preview)
         print(json.dumps(pointer, indent=2))
 
 

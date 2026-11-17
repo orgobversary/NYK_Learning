@@ -6,12 +6,13 @@ creating a release when the validated team and passing inputs are unchanged.
 
 ## Current operational status
 
-The schedule is installed but **suspended**. On 2026-11-17, both the local runtime and a
-manual Hugging Face Job exhausted three 45-second attempts against the NBA Stats
-participant endpoint before any passing rows were normalized. Team ingestion and exact
-coverage validation succeeded in both environments. Keep the schedule suspended until
-the passing source succeeds or a separately authorized export is imported and validated;
-do not replace the missing observed network with synthetic edges in a real preview.
+The schedule is installed but **suspended pending one manual fallback run**. On
+2026-11-17, both runtimes exhausted their NBA Stats all-pass retries. The documented
+alternate source now provides play-by-play-derived assister-to-scorer edges instead. A
+local five-season import reconciled exactly to every team assist and the complete private
+preview passed manifest and browser validation. Keep the schedule suspended until the
+same fallback succeeds in a manual Hugging Face Job; never describe assist edges as all
+passes and never replace an unavailable observed network with synthetic edges.
 
 ## Infrastructure
 
@@ -28,10 +29,11 @@ command argument, repository file, manifest, or Space variable.
 
 ## Promotion gates
 
-The job must complete source retrieval, exact season coverage, passing schema checks,
+The job must complete source retrieval, exact season and assist reconciliation, edge schema checks,
 closed-manifest validation, chronological modeling, story generation, payload validation,
-and private Space upload before atomically changing `registry/latest-research.json` and
-`registry/latest-preview.json`. A failed job leaves both pointers unchanged.
+and private Space upload before replacing `registry/latest-research.json` and
+`registry/latest-preview.json` through temporary files. A failure before promotion leaves
+both pointers unchanged; operators must compare both pointers after any interrupted job.
 
 Run a manual Job first, repeat it to prove the no-change path, and test rollback to the
 previous Space commit before enabling the schedule. Public visibility remains a separate

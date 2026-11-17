@@ -552,15 +552,23 @@ def _generate_passing_chapter(passing_path, charts, previews):
     import matplotlib.pyplot as plt
     import pandas as pd
     from d3blocks import D3Blocks
-    from knicks_history.passing import (aggregate_passing_edges, load_passing_edges,
+    from knicks_history.passing import (aggregate_assist_edges, aggregate_passing_edges,
+                                        load_assist_edges, load_passing_edges,
                                         load_research_edges)
     passing_path = Path(passing_path)
     header = passing_path.read_text(encoding="utf-8").splitlines()[0]
-    loader = load_research_edges if "retrieved_at" in header else load_passing_edges
+    assist_network = "assisted_makes" in header
+    loader = load_assist_edges if assist_network else (
+        load_research_edges if "retrieved_at" in header else load_passing_edges)
     rows = loader(passing_path)
-    edges, seasons = aggregate_passing_edges(rows)
+    edges, seasons = (aggregate_assist_edges(rows) if assist_network
+                      else aggregate_passing_edges(rows))
+    title = "Five-season Assist Connections" if assist_network else "Five-season Passing Lanes"
+    measure = "Assisted made baskets" if assist_network else "Passes"
+    source_prefix = "Assister · " if assist_network else "Passer · "
+    target_prefix = "Scorer · " if assist_network else "Receiver · "
     d3 = D3Blocks(support=False, verbose="error")
-    d3.sankey(pd.DataFrame(edges), title="Five-season Passing Lanes",
+    d3.sankey(pd.DataFrame(edges), title=title,
               filepath=str(Path(charts) / "passing-lanes.html"), showfig=False,
               show_side_panel=False, show_top_panel=False, dark_mode=True,
               color_background="#05050a", figsize=[1200, 760])
@@ -568,13 +576,15 @@ def _generate_passing_chapter(passing_path, charts, previews):
     plt.style.use("dark_background")
     top = edges[:12]
     fig, ax = plt.subplots(figsize=(12, 7), layout="constrained")
-    ax.barh([f"{row['source'].replace('Passer · ', '')} → "
-             f"{row['target'].replace('Receiver · ', '')}" for row in reversed(top)],
+    ax.barh([f"{row['source'].replace(source_prefix, '')} → "
+             f"{row['target'].replace(target_prefix, '')}" for row in reversed(top)],
             [row["weight"] for row in reversed(top)], color="#2378ff")
-    ax.set(title=f"Passing lanes · {seasons[0]} through {seasons[-1]}", xlabel="Passes")
+    ax.set(title=f"{title} · {seasons[0]} through {seasons[-1]}", xlabel=measure)
     fig.savefig(Path(previews) / "passing-lanes.png", dpi=150, facecolor="#05050a")
     plt.close(fig)
     return {"seasons": seasons, "rows": len(rows), "edges": len(edges),
+            "relation_type": "assisted_made_basket" if assist_network else "passes_made",
+            "measure_label": measure,
             "synthetic": all(row["synthetic"] for row in rows)}
 
 
@@ -630,7 +640,7 @@ def _write_story_manifest(space, season, revision, passing, model, synthetic):
         {"id": "opening", "label": "Opening signal"},
         {"id": "season", "label": "Season arc"},
         {"id": "opponents", "label": "Opponent gravity"},
-        {"id": "passing", "label": "Passing lanes", "chart": "charts/passing-lanes.html",
+        {"id": "passing", "label": "Teammate network", "chart": "charts/passing-lanes.html",
          "preview": "previews/passing-lanes.png"},
         {"id": "models", "label": "Model lab", "chart": "charts/model-signal.html",
          "preview": "previews/model-signal.png"},

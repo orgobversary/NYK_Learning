@@ -5,7 +5,7 @@ previews lives here. Real-data Parquet, HTML, PNG, models, and manifests belong 
 ignored `build/` or in the approved private research Bucket. Raw research is never put
 in Git or the synthetic Hugging Face dataset repository.
 
-The story produces eight coordinated team views, a five-season passing Sankey, a model
+The story produces eight coordinated team views, a five-season teammate Sankey, a model
 lab, and a methods chapter. Interactive D3Blocks artifacts have portable static fallbacks.
 
 ## Fast local review
@@ -47,12 +47,16 @@ python scripts/import_team_logs.py --start 2026 --end 2026 --root data/live
 knicks build --root data/live --expected config/expected-live.csv --parquet
 ```
 
-For a local 2025–26 review build, first create or obtain an authorized normalized passing
-CSV, then supply it explicitly:
+For a local review build, create the authorized five-season assist network, then supply
+its explicit combined contract:
 
 ```bash
+python scripts/fetch_assist_network.py \
+  --season 2021-22 --season 2022-23 --season 2023-24 \
+  --season 2024-25 --season 2025-26 \
+  --rights-basis '<documented private-research basis>'
 python scripts/build_hf_release.py --root data/live --season 2025-26 \
-  --passing data/research/player_passing/edges/2025-26.csv \
+  --passing data/research/player_passing/assist_edges/five-season.csv \
   --output build/huggingface --allow-dirty
 python scripts/validate_hf_release.py build/huggingface
 python -m http.server 8000 --bind 127.0.0.1 --directory build/huggingface/space
