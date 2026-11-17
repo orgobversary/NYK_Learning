@@ -4,52 +4,85 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#05050a" />
     <title>NYK World · {{SEASON}}</title>
     <link rel="stylesheet" href="styles/app.css" />
   </head>
   <body>
-    <a class="skip-link" href="#gallery">Skip to visualizations</a>
-    <main>
-      <header class="hero">
-        <p class="eyebrow">NYK World · team-game analytics · {{MODE_LABEL}}</p>
-        <h1>{{SEASON}} regular season</h1>
-        <p class="lede">{{CHART_COUNT}} interactive views generated from a versioned ETL release. Team-level results only—no player data or predictive model.</p>
+    <a class="skip-link" href="#story">Skip to the season story</a>
+    <div class="arena-glow arena-glow--blue" aria-hidden="true"></div>
+    <div class="arena-glow arena-glow--magenta" aria-hidden="true"></div>
+    <nav class="story-rail" aria-label="Story chapters">
+      <a href="#opening" aria-label="Opening signal"><span>01</span></a>
+      <a href="#season" aria-label="Season arc"><span>02</span></a>
+      <a href="#opponents" aria-label="Opponent gravity"><span>03</span></a>
+      <a href="#passing" aria-label="Passing lanes"><span>04</span></a>
+      <a href="#models" aria-label="Model lab"><span>05</span></a>
+      <a href="#methods" aria-label="Methods and provenance"><span>06</span></a>
+    </nav>
+    <main id="story">
+      <header id="opening" class="hero story-chapter" data-chapter="opening">
+        <div class="hero-topline">
+          <p class="eyebrow">NYK World / {{MODE_LABEL}}</p>
+          <p class="release-state"><span aria-hidden="true"></span> Versioned research signal</p>
+        </div>
+        <div class="hero-copy">
+          <p class="chapter-number">Chapter 01</p>
+          <h1>The signal beneath the <em>season.</em></h1>
+          <p class="lede">A reproducible basketball data story shaped from immutable releases, pregame features, relationship maps, and honest model evaluation.</p>
+        </div>
+        <div class="season-lockup"><span>{{SEASON}}</span><small>Regular season focus</small></div>
         <dl class="metrics" aria-label="Season totals">
-          <div><dt>Games</dt><dd>{{GAME_COUNT}}</dd></div>
-          <div><dt>Wins</dt><dd>{{WINS}}</dd></div>
-          <div><dt>Losses</dt><dd>{{LOSSES}}</dd></div>
+          <div><dt>Games</dt><dd>{{GAME_COUNT}}</dd><span>validated rows</span></div>
+          <div><dt>Wins</dt><dd>{{WINS}}</dd><span>observed outcomes</span></div>
+          <div><dt>Losses</dt><dd>{{LOSSES}}</dd><span>observed outcomes</span></div>
+          <div><dt>Views</dt><dd>{{CHART_COUNT}}</dd><span>interactive lenses</span></div>
         </dl>
+        <a class="scroll-cue" href="#season">Enter the story <span aria-hidden="true">↓</span></a>
       </header>
 
-      <section id="gallery" class="gallery" aria-labelledby="gallery-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Interactive gallery</p>
-            <h2 id="gallery-title">Read the season {{CHART_COUNT}} ways</h2>
+      <section id="season" class="story-chapter" data-chapter="season" aria-labelledby="season-title">
+        <div class="chapter-heading">
+          <p class="chapter-number">Chapter 02 / Season arc</p>
+          <h2 id="season-title">Momentum leaves a <span>trace.</span></h2>
+          <p>Move through the release one analytical lens at a time. The chart surface stays inspectable, keyboard-accessible, and backed by a portable static fallback.</p>
+        </div>
+        <div id="gallery" class="gallery" aria-labelledby="gallery-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Interactive theater</p><h3 id="gallery-title">Read the season {{CHART_COUNT}} ways</h3></div>
+            <p id="chart-description">Scoring and prior-five-game form over the season.</p>
           </div>
-          <p id="chart-description">Scoring and prior-five-game form over the season.</p>
-        </div>
-        <div class="tabs" role="tablist" aria-label="Choose a visualization">
-          {{CHART_TABS}}
-        </div>
-        <div id="chart-panel" class="chart-panel" role="tabpanel" tabindex="0" aria-labelledby="tab-season-pulse">
-          <iframe id="chart-frame" title="Season pulse interactive chart" src="charts/season-pulse.html" loading="eager"></iframe>
-          <p class="chart-fallback">If the interactive chart does not load, open its <a id="preview-link" href="previews/season-pulse.png">static PNG preview</a>.</p>
+          <div class="tabs" role="tablist" aria-label="Choose a visualization">{{CHART_TABS}}</div>
+          <div id="chart-panel" class="chart-panel" role="tabpanel" tabindex="0" aria-labelledby="tab-season-pulse">
+            <div class="frame-chrome"><span></span><span></span><span></span><strong>NYK / ANALYTICS</strong></div>
+            <iframe id="chart-frame" title="Season pulse interactive chart" src="charts/season-pulse.html" loading="eager"></iframe>
+            <p class="chart-fallback">Interactive artifact unavailable? Open the <a id="preview-link" href="previews/season-pulse.png">static PNG preview</a>.</p>
+          </div>
         </div>
       </section>
 
-      <section class="preview-grid" aria-labelledby="previews-title">
-        <div class="section-heading"><div><p class="eyebrow">Static fallbacks</p><h2 id="previews-title">Portable previews</h2></div></div>
-        {{PREVIEW_CARDS}}
+      <section id="opponents" class="story-chapter" data-chapter="opponents" aria-labelledby="opponents-title">
+        <div class="chapter-heading"><p class="chapter-number">Chapter 03 / Opponent gravity</p><h2 id="opponents-title">Every matchup bends the <span>shape.</span></h2><p>The portable preview wall preserves the analytical record beyond any one browser or chart runtime.</p></div>
+        <div class="preview-grid">{{PREVIEW_CARDS}}</div>
       </section>
 
-      <footer>
-        <p>Data snapshot <code>{{DATASET_REVISION}}</code></p>
-        <nav aria-label="Project links">
-          {{DATASET_LINK}}
-          <a href="https://github.com/orgobversary/NYK_Learning" target="_blank" rel="noreferrer">ETL source</a>
-        </nav>
-      </footer>
+      <section id="passing" class="story-chapter feature-chapter" data-chapter="passing" aria-labelledby="passing-title">
+        <div class="chapter-heading"><p class="chapter-number">Chapter 04 / Passing lanes</p><h2 id="passing-title">The ball reveals the <span>network.</span></h2><p>Five seasons of passer-to-receiver relationships, density-limited for legibility while the complete research table remains private.</p></div>
+        <div class="feature-frame"><iframe title="Five-season player passing network" src="charts/passing-lanes.html" loading="lazy"></iframe><a href="previews/passing-lanes.png">Open static passing preview</a></div>
+      </section>
+
+      <section id="models" class="story-chapter feature-chapter" data-chapter="models" aria-labelledby="models-title">
+        <div class="chapter-heading"><p class="chapter-number">Chapter 05 / Model lab</p><h2 id="models-title">Prediction, with the lights <span>on.</span></h2><p>Chronological backtests compare interpretable models with dummy baselines. No causal claims. No betting advice. No hidden target leakage.</p></div>
+        <div class="model-disclosure"><span>Pregame only</span><span>Time-aware split</span><span>Baseline visible</span><span>Uncertainty reported</span></div>
+        <div class="feature-frame"><iframe title="Backtested model signal" src="charts/model-signal.html" loading="lazy"></iframe><a href="previews/model-signal.png">Open static model preview</a></div>
+      </section>
+
+      <section id="methods" class="story-chapter methods" data-chapter="methods" aria-labelledby="methods-title">
+        <div class="chapter-heading"><p class="chapter-number">Chapter 06 / Methods</p><h2 id="methods-title">Every claim keeps its <span>receipt.</span></h2></div>
+        <div class="method-grid"><article><p class="eyebrow">Feature timing</p><h3>Before tipoff</h3><p>Rolling features stop at the previous completed game. Targets never enter the model inputs.</p></article><article><p class="eyebrow">Release integrity</p><h3>Closed manifests</h3><p>Unexpected, missing, or modified artifacts invalidate the complete release.</p></article><article><p class="eyebrow">Research boundary</p><h3>Private by default</h3><p>Real rows and real-data visuals remain authenticated until an explicit public review.</p></article></div>
+      </section>
+
+      <footer><div><p class="eyebrow">Release coordinates</p><p>Snapshot <code>{{DATASET_REVISION}}</code></p></div><nav aria-label="Project links">{{DATASET_LINK}}<a href="story-manifest.json">Story manifest</a><a href="https://github.com/orgobversary/NYK_Learning" target="_blank" rel="noreferrer">ETL source</a></nav></footer>
     </main>
     <script src="scripts/app.js"></script>
   </body>

@@ -20,7 +20,8 @@ PERCENT_FIELDS = (("fg_pct", "fgm", "fga"), ("fg3_pct", "fg3m", "fg3a"),
 PREGAME_AVERAGES = ("pts", "opponent_pts", "point_margin", "reb", "ast", "tov")
 TEXT_SUFFIXES = {".css", ".html", ".js", ".json", ".md"}
 FORBIDDEN_MARKERS = ("/var/home/", "file:///home/", "file:///var/", "gumroad",
-                     "google-analytics", "googletagmanager", "sk-")
+                     "google-analytics", "googletagmanager")
+FORBIDDEN_PATTERNS = (re.compile(r"sk-[a-z0-9_-]{16,}", re.IGNORECASE),)
 DATASET_ID = "obversarystudios/nyk-world-data"
 MANIFEST_NAME = "release-manifest.json"
 CHARTS = (
@@ -388,9 +389,10 @@ disable_embedding: false
 
 # NYK World
 
-Eight D3Blocks views and Matplotlib fallbacks for the {season} Knicks season. Snapshot
-identifier: `{revision}`. Real-data builds are local research artifacts and must not be
-uploaded.{dataset_note} The app has no player data or predictive model.
+A six-chapter, neon-arena data story with eight team-game D3Blocks views, Matplotlib
+fallbacks, a passing-network chapter, and an inspectable model-signal chapter. Snapshot
+identifier: `{revision}`. Real research releases and their authenticated previews remain
+private until explicit review.{dataset_note} Synthetic releases are demonstrations only.
 '''
 
 
@@ -544,6 +546,103 @@ def _generate_d3(games, features, monthly, paths, destination):
     _normalize_javascript_assets(destination)
 
 
+def _generate_passing_chapter(passing_path, charts, previews):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    from d3blocks import D3Blocks
+    from knicks_history.passing import (aggregate_passing_edges, load_passing_edges,
+                                        load_research_edges)
+    passing_path = Path(passing_path)
+    header = passing_path.read_text(encoding="utf-8").splitlines()[0]
+    loader = load_research_edges if "retrieved_at" in header else load_passing_edges
+    rows = loader(passing_path)
+    edges, seasons = aggregate_passing_edges(rows)
+    d3 = D3Blocks(support=False, verbose="error")
+    d3.sankey(pd.DataFrame(edges), title="Five-season Passing Lanes",
+              filepath=str(Path(charts) / "passing-lanes.html"), showfig=False,
+              show_side_panel=False, show_top_panel=False, dark_mode=True,
+              color_background="#05050a", figsize=[1200, 760])
+    _normalize_javascript_assets(charts)
+    plt.style.use("dark_background")
+    top = edges[:12]
+    fig, ax = plt.subplots(figsize=(12, 7), layout="constrained")
+    ax.barh([f"{row['source'].replace('Passer · ', '')} → "
+             f"{row['target'].replace('Receiver · ', '')}" for row in reversed(top)],
+            [row["weight"] for row in reversed(top)], color="#2378ff")
+    ax.set(title=f"Passing lanes · {seasons[0]} through {seasons[-1]}", xlabel="Passes")
+    fig.savefig(Path(previews) / "passing-lanes.png", dpi=150, facecolor="#05050a")
+    plt.close(fig)
+    return {"seasons": seasons, "rows": len(rows), "edges": len(edges),
+            "synthetic": all(row["synthetic"] for row in rows)}
+
+
+def _generate_model_chapter(games, features, model_dir, charts, previews):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    from d3blocks import D3Blocks
+    model_dir = Path(model_dir) if model_dir else None
+    metrics, run_id = None, "ILLUSTRATIVE-SYNTHETIC-SIGNAL"
+    if model_dir and (model_dir / "predictions.parquet").is_file():
+        import polars as pl
+        predictions = pl.read_parquet(model_dir / "predictions.parquet").sort("game_date").to_dicts()
+        metrics = json.loads((model_dir / "metrics.json").read_text(encoding="utf-8"))
+        run_id = json.loads((model_dir / "model-run.json").read_text(encoding="utf-8"))["run_id"]
+    else:
+        predictions = []
+        for game, feature in zip(games, features):
+            margin = feature.get("prior_5_point_margin") or 0
+            probability = max(.15, min(.85, .5 + margin / 40))
+            predictions.append({"game_date": game["game_date"],
+                                "predicted_win_probability": probability,
+                                "actual_win": 1 if game["wl"] == "W" else 0,
+                                "predicted_margin": margin,
+                                "actual_margin": game["point_margin"]})
+    frame = pd.DataFrame({"date": [row["game_date"] for row in predictions],
+                          "Win probability": [row["predicted_win_probability"] for row in predictions],
+                          "Actual result": [row["actual_win"] for row in predictions]})
+    d3 = D3Blocks(support=False, verbose="error")
+    d3.timeseries(frame, datetime="date", dt_format="%Y-%m-%d", title="Model Signal",
+                  filepath=str(Path(charts) / "model-signal.html"), showfig=False,
+                  show_side_panel=False, show_top_panel=False, dark_mode=True,
+                  color_background="#05050a")
+    _normalize_javascript_assets(charts)
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots(figsize=(12, 6), layout="constrained")
+    ax.plot([row["game_date"] for row in predictions],
+            [row["predicted_win_probability"] for row in predictions], color="#f24cff",
+            marker="o", label="Pregame win probability")
+    ax.scatter([row["game_date"] for row in predictions], [row["actual_win"] for row in predictions],
+               color="#5ce8ff", label="Actual result", zorder=3)
+    ax.set_ylim(-.05, 1.05); ax.set(title="Backtested model signal", ylabel="Probability / outcome")
+    ax.tick_params(axis="x", rotation=45); ax.legend(frameon=False)
+    fig.savefig(Path(previews) / "model-signal.png", dpi=150, facecolor="#05050a")
+    plt.close(fig)
+    return {"run_id": run_id, "metrics": metrics, "rows": len(predictions),
+            "illustrative": model_dir is None}
+
+
+def _write_story_manifest(space, season, revision, passing, model, synthetic):
+    chapters = [
+        {"id": "opening", "label": "Opening signal"},
+        {"id": "season", "label": "Season arc"},
+        {"id": "opponents", "label": "Opponent gravity"},
+        {"id": "passing", "label": "Passing lanes", "chart": "charts/passing-lanes.html",
+         "preview": "previews/passing-lanes.png"},
+        {"id": "models", "label": "Model lab", "chart": "charts/model-signal.html",
+         "preview": "previews/model-signal.png"},
+        {"id": "methods", "label": "Methods and provenance"},
+    ]
+    _write_json(Path(space) / "story-manifest.json",
+                {"format_version": 1, "season": season, "dataset_revision": revision,
+                 "synthetic": synthetic, "chapters": chapters, "passing": passing,
+                 "model": model, "disclosures": ["backtest only", "not causal",
+                                                   "not betting advice"]})
+
+
 def _space_index(template, season, revision, games, mode_label="Historical extract",
                  dataset_id=None):
     wins = sum(x["wl"] == "W" for x in games)
@@ -595,7 +694,7 @@ def _write_payload_manifest(payload, metadata):
 
 def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
                       dataset_revision="LOCAL_PREVIEW", space_season=None,
-                      allow_dirty=False, repo=None):
+                      allow_dirty=False, repo=None, passing_path=None, model_dir=None):
     require_visualization_python()
     seasons = [seasons] if isinstance(seasons, str) else list(dict.fromkeys(seasons))
     if not seasons: raise ValueError("Select at least one season")
@@ -652,6 +751,11 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
     (space / "README.md").write_text(_space_readme(space_season, dataset_revision), encoding="utf-8")
     _generate_d3(games, features, monthly, build_result_paths(games), space / "charts")
     _generate_previews(games, features, monthly, space / "previews")
+    if passing_path is None:
+        raise ValueError("A passing CSV is required for a real research release")
+    passing = _generate_passing_chapter(passing_path, space / "charts", space / "previews")
+    model = _generate_model_chapter(games, features, model_dir, space / "charts", space / "previews")
+    _write_story_manifest(space, space_season, dataset_revision, passing, model, False)
     (space / "index.html").write_text(_space_index(template, space_season, dataset_revision, games), encoding="utf-8")
     space_manifest = _write_payload_manifest(space, {**common, **status, "payload": "space", "space_season": space_season,
         "dataset_id": DATASET_ID, "dataset_revision": dataset_revision, "dataset_manifest_sha256": dataset_sha,
@@ -674,6 +778,8 @@ def _validate_payload(payload, required):
             content = path.read_text(encoding="utf-8", errors="replace").lower()
             errors += [f"forbidden marker {marker!r}: {path.relative_to(payload)}"
                        for marker in FORBIDDEN_MARKERS if marker in content]
+            errors += [f"forbidden secret pattern: {path.relative_to(payload)}"
+                       for pattern in FORBIDDEN_PATTERNS if pattern.search(content)]
     return manifest, errors
 
 
@@ -683,8 +789,11 @@ def validate_hub_release(output):
     chart_artifacts = tuple(
         f"{folder}/{chart['slug']}.{suffix}"
         for chart in CHARTS for folder, suffix in (("charts", "html"), ("previews", "png")))
+    story_artifacts = ("story-manifest.json", "charts/passing-lanes.html",
+                       "previews/passing-lanes.png", "charts/model-signal.html",
+                       "previews/model-signal.png")
     space, space_errors = _validate_payload(
-        output / "space", ("README.md", "index.html", *chart_artifacts))
+        output / "space", ("README.md", "index.html", *chart_artifacts, *story_artifacts))
     errors += space_errors
     if space.get("dataset_manifest_sha256") != digest(output / "dataset" / MANIFEST_NAME):
         errors.append("Space does not bind the current dataset manifest")

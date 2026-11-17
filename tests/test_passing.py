@@ -1,9 +1,16 @@
 import csv
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
-from knicks_history.passing import FIELDS, aggregate_passing_edges, load_passing_edges
+from knicks_history.passing import (
+    FIELDS,
+    aggregate_passing_edges,
+    load_passing_edges,
+    normalize_passes_made,
+    participant_ids,
+)
 
 
 class PassingLabTests(unittest.TestCase):
@@ -33,6 +40,31 @@ class PassingLabTests(unittest.TestCase):
         rows = load_passing_edges("fixtures/passing-demo.csv", require_synthetic=True)
         with self.assertRaisesRegex(ValueError, "exactly five seasons"):
             aggregate_passing_edges([row for row in rows if row["season"] != "2025-26"])
+
+    def test_private_nba_response_is_normalized_without_pandas(self):
+        participants_payload = {"resultSets": [{"name": "LeagueDashPlayerStats",
+            "headers": ["PLAYER_ID", "PLAYER_NAME", "TEAM_ID"],
+            "rowSet": [[1, "One", 1610612752], [2, "Two", 1610612752]]}]}
+        participants = participant_ids(participants_payload)
+        passing = {"resultSets": [{"name": "PassesMade",
+            "headers": ["PLAYER_ID", "PASS_TEAMMATE_PLAYER_ID", "G", "PASS", "AST",
+                        "FGM", "FGA", "FG3M", "FG3A"],
+            "rowSet": [[1, 2, 20, 100, 12, 22, 45, 8, 20]]}]}
+        raw = json.dumps(passing).encode()
+        rows = normalize_passes_made(passing, "2024-25", "1", participants,
+                                     "https://stats.nba.com/stats/playerdashptpass",
+                                     "2026-11-17T00:00:00+00:00", "private research", raw)
+        self.assertEqual(rows[0]["passes"], 100)
+        self.assertFalse(rows[0]["synthetic"])
+
+    def test_private_nba_response_rejects_unknown_receiver(self):
+        payload = {"resultSets": [{"name": "PassesMade",
+            "headers": ["PLAYER_ID", "PASS_TEAMMATE_PLAYER_ID", "G", "PASS", "AST",
+                        "FGM", "FGA", "FG3M", "FG3A"],
+            "rowSet": [[1, 3, 1, 2, 1, 1, 1, 0, 0]]}]}
+        with self.assertRaisesRegex(ValueError, "unknown receiver"):
+            normalize_passes_made(payload, "2024-25", "1", {"1": "One", "2": "Two"},
+                                  "source", "time", "private research")
 
 
 if __name__ == "__main__":

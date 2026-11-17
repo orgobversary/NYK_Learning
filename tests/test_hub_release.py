@@ -202,6 +202,19 @@ class HubReleaseTests(unittest.TestCase):
             _, errors = _validate_payload(root, ("known.txt",))
             self.assertIn("unexpected file: extra.txt", errors)
 
+    def test_secret_scan_allows_css_mask_but_rejects_token_shape(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "app.css").write_text("body { mask-image: none; }", encoding="utf-8")
+            from knicks_history.hub_release import _write_payload_manifest
+            _write_payload_manifest(root, {"payload": "test"})
+            _, errors = _validate_payload(root, ("app.css",))
+            self.assertEqual(errors, [])
+            (root / "app.css").write_text("token=sk-abcdefghijklmnop1234", encoding="utf-8")
+            _write_payload_manifest(root, {"payload": "test"})
+            _, errors = _validate_payload(root, ("app.css",))
+            self.assertTrue(any("secret pattern" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

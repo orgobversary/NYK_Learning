@@ -21,7 +21,10 @@ knicks ingest --input fixtures/league-demo.json --synthetic --season 2024-25 --r
 knicks build --root data/demo --expected config/expected-demo.csv --parquet
 ```
 
-Use `python scripts/stage_release.py data/demo build/preview-demo` to stage the current release. Live fetching requires the `live` extra and should follow a successful synthetic run.
+Use `python scripts/stage_release.py data/demo build/preview-demo` to stage the current
+release. Live fetching requires the `live` or `research` extra and should follow a
+successful synthetic run. Use `.[research,visualization]` for passing, modeling, and
+story builds.
 
 ## Coding Style & Naming Conventions
 
@@ -37,7 +40,14 @@ Recent history uses short, imperative subjects such as `Add Knicks ETL foundatio
 
 ## Data Safety & Configuration
 
-Never commit credentials, `.env` files, virtual environments, raw third-party archives, or generated datasets. Keep synthetic and live roots separate. Real basketball rows, real-data charts, and screenshots stay local under the research-only policy; public Hub artifacts are synthetic demonstrations only. Treat empty API responses as failures requiring investigation rather than evidence of zero games. Read `docs/CHECKPOINT.md` and `docs/RESEARCH_SCOPE.md` before changing data boundaries, Hub publication, or release architecture.
+Never commit credentials, `.env` files, virtual environments, raw third-party archives,
+or generated datasets. Keep synthetic and live roots separate. Real basketball rows,
+models, charts, and screenshots may exist only under ignored local roots, the approved
+private research Bucket, or the approved private Space. Never put them in Git or the
+synthetic dataset repository. Public promotion requires an explicit source-rights
+review. Treat empty API responses as failures, not evidence of zero games. Read
+`docs/CHECKPOINT.md`, `docs/RESEARCH_SCOPE.md`, and `docs/WEEKLY_RESEARCH.md` before
+changing data boundaries, Hub publication, or release architecture.
 
 ## Current Checkpoint
 
