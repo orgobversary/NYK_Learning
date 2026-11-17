@@ -20,7 +20,7 @@ do not replace the missing observed network with synthetic edges in a real previ
 - Schedule: Monday at `11:00 UTC`
 - Hardware: `cpu-basic`; timeout 45 minutes; two attempts; concurrency disabled
 - Script: `scripts/weekly_research.py` at a pinned Git revision
-- Installed schedule ID: `obversarystudios/6afcbf87884144d2f44f81bd` (suspended)
+- Installed schedule ID: `obversarystudios/6afcc221884144d2f44f828b` (suspended)
 
 The job mounts the private Bucket at `/research`, bootstraps the cloned project with
 `uv pip`, and receives `HF_TOKEN` as a scoped write secret. Never place the token in a
