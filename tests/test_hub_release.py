@@ -16,6 +16,7 @@ from knicks_history.hub_release import (
     public_payload_allowed,
     resolve_team_dimension,
     safe_ratio,
+    _normalize_javascript_assets,
     _space_readme,
     _validate_payload,
 )
@@ -146,6 +147,16 @@ class HubReleaseTests(unittest.TestCase):
         self.assertIn("colorFrom: blue", readme)
         self.assertIn("colorTo: indigo", readme)
         self.assertNotIn("colorTo: orange", readme)
+
+    def test_javascript_assets_are_normalized_to_utf8(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "d3.v4.js"
+            path.write_text("const label = 'Knicks';\r\n", encoding="utf-16")
+            _normalize_javascript_assets(folder)
+            raw = path.read_bytes()
+            self.assertFalse(raw.startswith((b"\xff\xfe", b"\xfe\xff")))
+            self.assertNotIn(b"\x00", raw)
+            self.assertEqual(raw.decode("utf-8"), "const label = 'Knicks';\n")
 
     def test_team_dimension_uses_specific_then_common_fallback(self):
         with tempfile.TemporaryDirectory() as folder:

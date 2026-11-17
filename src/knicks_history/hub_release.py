@@ -480,6 +480,15 @@ def _generate_previews(games, features, monthly, destination):
     fig.savefig(destination / "matchup-grid.png", dpi=150, facecolor="#07111d"); plt.close(fig)
 
 
+def _normalize_javascript_assets(destination):
+    """Convert D3Blocks UTF-16 bundles to Hub-compatible UTF-8 text."""
+    for path in Path(destination).glob("*.js"):
+        raw = path.read_bytes()
+        if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+            text = raw.decode("utf-16").replace("\r\n", "\n").replace("\r", "\n")
+            path.write_text(text, encoding="utf-8", newline="\n")
+
+
 def _generate_d3(games, features, monthly, paths, destination):
     import numpy as np
     import pandas as pd
@@ -532,6 +541,7 @@ def _generate_d3(games, features, monthly, paths, destination):
     d3.matrix(matchup.fillna(0), title="Matchup Grid", vmin=0, vmax=100,
               cmap="interpolateRdBu", filepath=str(destination / "matchup-grid.html"),
               showfig=False, figsize=[850, 700])
+    _normalize_javascript_assets(destination)
 
 
 def _space_index(template, season, revision, games, mode_label="Historical extract",
