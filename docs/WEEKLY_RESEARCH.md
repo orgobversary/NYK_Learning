@@ -6,13 +6,13 @@ creating a release when the validated team and passing inputs are unchanged.
 
 ## Current operational status
 
-The schedule is installed but **suspended pending one manual fallback run**. On
-2026-11-17, both runtimes exhausted their NBA Stats all-pass retries. The documented
-alternate source now provides play-by-play-derived assister-to-scorer edges instead. A
-local five-season import reconciled exactly to every team assist and the complete private
-preview passed manifest and browser validation. Keep the schedule suspended until the
-same fallback succeeds in a manual Hugging Face Job; never describe assist edges as all
-passes and never replace an unavailable observed network with synthetic edges.
+The schedule is **active**. On 2026-11-17, the documented play-by-play fallback completed
+multiple clean Hugging Face Jobs after the NBA Stats all-pass endpoint timed out. Release
+`20261117T215020Z-3a950058` was built from Git commit `8b5ea64`, promoted to the private
+Space, downloaded again, and passed closed-manifest plus desktop, mobile, and 200% browser
+checks. Follow-up Job `6afccc2f884144d2f44f87ef` detected unchanged semantic inputs and
+exited before modeling or publication. Never describe assist edges as all passes and never
+replace an unavailable observed network with synthetic edges.
 
 ## Infrastructure
 
@@ -21,7 +21,7 @@ passes and never replace an unavailable observed network with synthetic edges.
 - Schedule: Monday at `11:00 UTC`
 - Hardware: `cpu-basic`; timeout 45 minutes; two attempts; concurrency disabled
 - Script: `scripts/weekly_research.py` at a pinned Git revision
-- Installed schedule ID: `obversarystudios/6afcc221884144d2f44f828b` (suspended)
+- Installed schedule ID: `obversarystudios/6afcc221884144d2f44f828b` (active)
 
 The job mounts the private Bucket at `/research`, bootstraps the cloned project with
 `uv pip`, and receives `HF_TOKEN` as a scoped write secret. Never place the token in a
