@@ -124,7 +124,8 @@ def load_current_release(root, seasons):
         all_coverage = list(csv.DictReader(stream))
     selected = {}
     for season in seasons:
-        rows = [row for row in all_rows if row["season"] == season]
+        rows = [row for row in all_rows if row["season"] == season and
+                row.get("season_type") == "Regular Season"]
         coverage = [row for row in all_coverage if row["season"] == season and
                     row["season_type"] == "Regular Season"]
         if not rows:
@@ -141,6 +142,25 @@ def load_current_release(root, seasons):
             raise ValueError(f"Coverage has missing opponents for {season}")
         selected[season] = {"rows": rows, "coverage": evidence}
     return release, manifest, selected
+
+
+def load_playoff_partition(release, season):
+    """Load one coverage-verified postseason partition from an immutable release."""
+    release = Path(release)
+    with (release / "team_games.csv").open(newline="", encoding="utf-8") as stream:
+        rows = [row for row in csv.DictReader(stream)
+                if row["season"] == season and row["season_type"] == "Playoffs"]
+    with (release / "coverage.csv").open(newline="", encoding="utf-8") as stream:
+        coverage = [row for row in csv.DictReader(stream)
+                    if row["season"] == season and row["season_type"] == "Playoffs"]
+    if len(coverage) != 1 or coverage[0].get("status") != "count_matches":
+        raise ValueError(f"Playoff coverage is not promoted for {season}")
+    expected = int(coverage[0]["expected_games"])
+    if len(rows) != expected:
+        raise ValueError(f"Expected {expected} {season} playoff games, found {len(rows)}")
+    if int(coverage[0].get("missing_opponent_rows") or 0):
+        raise ValueError(f"Playoff coverage has missing opponents for {season}")
+    return rows, coverage[0]
 
 
 def _integer(value):
@@ -227,6 +247,63 @@ def build_result_paths(games):
         edges[(venue, result)] += 1
     return [{"source": a, "target": b, "weight": weight}
             for (a, b), weight in sorted(edges.items())]
+
+
+def build_playoff_journey(games):
+    """Validate and narrate the Knicks' 2026 four-series championship run."""
+    games = sorted(games, key=lambda row: (row["game_date"], row["game_id"]))
+    expected = (
+        ("First Round", "ATL", 4, 2),
+        ("East Semifinals", "PHI", 4, 0),
+        ("East Finals", "CLE", 4, 0),
+        ("NBA Finals", "SAS", 4, 1),
+    )
+    if len(games) != 19 or any(row["season"] != "2025-26" or
+                               row["season_type"] != "Playoffs" for row in games):
+        raise ValueError("The championship story requires 19 verified 2025-26 playoff games")
+    groups = []
+    for game in games:
+        if not groups or groups[-1][0]["opponent_abbrev"] != game["opponent_abbrev"]:
+            groups.append([])
+        groups[-1].append(game)
+    observed = tuple((label, rows[0]["opponent_abbrev"],
+                      sum(row["wl"] == "W" for row in rows),
+                      sum(row["wl"] == "L" for row in rows))
+                     for (label, _, _, _), rows in zip(expected, groups))
+    if len(groups) != len(expected) or observed != expected:
+        raise ValueError(f"Unexpected 2026 playoff series path: {observed}")
+    if sum(row["point_margin"] for row in games) != 283:
+        raise ValueError("The playoff point differential does not reconcile to +283")
+    streak = best = cumulative_margin = cumulative_wins = 0
+    output, series = [], []
+    offset = 0
+    for series_index, ((label, opponent, wins, losses), rows) in enumerate(zip(expected, groups), 1):
+        series.append({"round": label, "opponent": opponent,
+                       "opponent_name": rows[0]["opponent_name"], "wins": wins,
+                       "losses": losses, "games": len(rows), "start_game": offset + 1,
+                       "end_game": offset + len(rows)})
+        for series_game, row in enumerate(rows, 1):
+            cumulative_margin += row["point_margin"]
+            cumulative_wins += row["wl"] == "W"
+            streak = streak + 1 if row["wl"] == "W" else 0
+            best = max(best, streak)
+            output.append({"game": offset + series_game, "series_game": series_game,
+                           "series_index": series_index, "round": label,
+                           "opponent": opponent, "date": row["game_date"],
+                           "venue": row["venue_side"], "result": row["wl"],
+                           "points": row["pts"], "opponent_points": row["opponent_pts"],
+                           "margin": row["point_margin"],
+                           "cumulative_margin": cumulative_margin,
+                           "cumulative_wins": cumulative_wins})
+        offset += len(rows)
+    if best != 13 or output[-1]["points"] != 94 or output[-1]["opponent_points"] != 90:
+        raise ValueError("The title-run milestones do not reconcile")
+    return {"games": output, "series": series, "wins": cumulative_wins,
+            "losses": len(games) - cumulative_wins, "point_differential": cumulative_margin,
+            "longest_win_streak": best,
+            "milestone": {"label": "The Hand of OG", "game": 18,
+                          "detail": "Game 4 Finals comeback from 29 points down",
+                          "source": "https://www.nba.com/news/season-review-2025-26"}}
 
 
 def build_opponent_views(games):
@@ -588,6 +665,65 @@ def _generate_passing_chapter(passing_path, charts, previews):
             "synthetic": all(row["synthetic"] for row in rows)}
 
 
+def _generate_playoff_chapter(games, charts, previews):
+    """Render the championship run as a responsive interactive timeline and PNG."""
+    import matplotlib.pyplot as plt
+    journey = build_playoff_journey(games)
+    payload = json.dumps(journey, separators=(",", ":"), allow_nan=False)
+    document = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>2026 championship road</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#05050a;color:#f8f9ff;--blue:#2378ff;--cyan:#5ce8ff;--orange:#ff7a18;--pink:#f24cff;--green:#62f6b1}
+*{box-sizing:border-box}body{margin:0;padding:clamp(1rem,3vw,2.3rem);background:radial-gradient(circle at 90% 0,#2378ff26,transparent 35%),#05050a}.top{display:flex;justify-content:space-between;gap:1rem;align-items:end}.kicker{margin:0;color:#9ba4c8;font-size:.68rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}h1{margin:.35rem 0 0;font-size:clamp(2rem,6vw,4.8rem);line-height:.9;letter-spacing:-.06em}.record{color:var(--orange);font:800 clamp(2rem,5vw,4rem)/1 ui-monospace,monospace}.filters{display:flex;gap:.5rem;margin:1.5rem 0;overflow:auto}.filters button{min-height:42px;padding:.65rem .9rem;border:1px solid #8693c344;border-radius:999px;background:#0d0f1b;color:#e9ecff;cursor:pointer}.filters button[aria-pressed=true]{background:var(--orange);color:#05050a;border-color:var(--orange)}.series{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem}.series article,.game{border:1px solid #8d9fff26;border-radius:16px;background:linear-gradient(145deg,#121522,#090a12);padding:1rem}.series span{color:#8f98ba;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em}.series strong{display:block;margin:.35rem 0;font-size:1.15rem}.series b{color:var(--green)}.timeline{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:.65rem;margin-top:.65rem}.game{position:relative;overflow:hidden;min-height:154px;transition:.2s transform,.2s border-color}.game:hover,.game:focus-within{transform:translateY(-3px);border-color:#5ce8ff88}.game::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--green)}.game.loss::before{background:var(--pink)}.game small{color:#8992b4}.game h2{margin:.55rem 0 .2rem;font-size:1.2rem}.score{font:750 1.55rem/1 ui-monospace,monospace}.margin{margin-top:.75rem;color:var(--green);font-size:.78rem}.loss .margin{color:#ff91d8}.milestone{margin-top:.7rem;padding:1rem;border:1px solid #ff7a1855;border-radius:16px;background:#28140c88;color:#ffd6b9}.milestone strong{color:var(--orange)}@media(max-width:760px){.top{align-items:start;flex-direction:column}.series{grid-template-columns:repeat(2,1fr)}.timeline{display:flex;overflow:auto;scroll-snap-type:x mandatory}.game{min-width:78vw;scroll-snap-align:start}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style></head><body><div class="top"><div><p class="kicker">NYK World / 2026 postseason</p><h1>Sixteen wins.<br>Fifty-three years.</h1></div><div class="record">16–3</div></div><div id="filters" class="filters" aria-label="Filter by playoff round"></div><div id="series" class="series"></div><div id="timeline" class="timeline" aria-live="polite"></div><div class="milestone"><strong>The Hand of OG.</strong> Game 4 of the Finals: New York erased a 29-point deficit before OG Anunoby's winning tip-in.</div><script>const journey=__PAYLOAD__;const filters=document.querySelector('#filters'),series=document.querySelector('#series'),timeline=document.querySelector('#timeline');const options=['All',...journey.series.map(x=>x.round)];function draw(selected='All'){timeline.replaceChildren();journey.games.filter(x=>selected==='All'||x.round===selected).forEach(x=>{const card=document.createElement('article');card.className='game '+(x.result==='W'?'win':'loss');const where=x.venue==='home'?'vs.':'@';card.innerHTML=`<small>Game ${x.game} · ${x.round}</small><h2>${where} ${x.opponent}</h2><div class="score">${x.points}–${x.opponent_points}</div><div class="margin">${x.result} · ${x.margin>0?'+':''}${x.margin} · Run margin ${x.cumulative_margin>0?'+':''}${x.cumulative_margin}</div>`;timeline.append(card)})}options.forEach((label,index)=>{const button=document.createElement('button');button.textContent=label;button.setAttribute('aria-pressed',String(index===0));button.onclick=()=>{[...filters.children].forEach(x=>x.setAttribute('aria-pressed','false'));button.setAttribute('aria-pressed','true');draw(label)};filters.append(button)});journey.series.forEach(x=>{const card=document.createElement('article');card.innerHTML=`<span>${x.round}</span><strong>${x.opponent_name}</strong><b>${x.wins}–${x.losses}</b>`;series.append(card)});draw();</script></body></html>"""
+    Path(charts).mkdir(parents=True, exist_ok=True)
+    (Path(charts) / "playoff-journey.html").write_text(
+        document.replace("__PAYLOAD__", payload), encoding="utf-8")
+
+    plt.style.use("dark_background")
+    rows = journey["games"]
+    fig, ax = plt.subplots(figsize=(14, 7), layout="constrained")
+    colors = ["#62f6b1" if row["result"] == "W" else "#f24cff" for row in rows]
+    ax.bar([row["game"] for row in rows], [row["margin"] for row in rows],
+           color=colors, alpha=.82, label="Game margin")
+    ax.plot([row["game"] for row in rows], [row["cumulative_margin"] for row in rows],
+            color="#ff7a18", linewidth=2.5, marker="o", label="Cumulative margin")
+    for item in journey["series"]:
+        ax.axvline(item["end_game"] + .5, color="#ffffff33", linewidth=1)
+        midpoint = (item["start_game"] + item["end_game"]) / 2
+        ax.text(midpoint, 292, item["opponent"], ha="center", color="#aeb7d7",
+                fontsize=10, fontweight="bold")
+    ax.axhline(0, color="#ffffff55", linewidth=1)
+    ax.set(title="Road to 16 wins · 2026 NBA champions", xlabel="Playoff game",
+           ylabel="Point margin", xticks=range(1, 20), ylim=(-60, 315))
+    ax.legend(frameon=False, loc="upper left")
+    Path(previews).mkdir(parents=True, exist_ok=True)
+    fig.savefig(Path(previews) / "playoff-journey.png", dpi=150, facecolor="#05050a")
+    plt.close(fig)
+    return {key: journey[key] for key in ("series", "wins", "losses", "point_differential",
+                                           "longest_win_streak", "milestone")}
+
+
+def _generate_synthetic_playoff_placeholder(charts, previews):
+    """Keep the public teaching build explicit when it has no postseason rows."""
+    import matplotlib.pyplot as plt
+    Path(charts).mkdir(parents=True, exist_ok=True)
+    html_document = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic playoff placeholder</title><style>:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#05050a;color:#f8f9ff}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:2rem;background:radial-gradient(circle at 70% 20%,#2378ff33,transparent 40%),#05050a}.card{max-width:760px;padding:clamp(2rem,6vw,5rem);border:1px solid #5ce8ff44;border-radius:28px;background:#0d101ccc}p{color:#aeb6d2;line-height:1.7}.label{color:#ff7a18;font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(2.5rem,8vw,6rem);line-height:.9;letter-spacing:-.06em;margin:.7rem 0}</style></head><body><article class="card"><div class="label">Synthetic demonstration</div><h1>No historical playoff claims.</h1><p>This public teaching build exercises the iframe and release contracts without publishing observed postseason rows. The authenticated research preview contains the verified championship journey.</p></article></body></html>"""
+    (Path(charts) / "playoff-journey.html").write_text(html_document, encoding="utf-8")
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots(figsize=(12, 6), layout="constrained")
+    ax.set_axis_off()
+    ax.text(.5, .58, "SYNTHETIC DEMONSTRATION", ha="center", va="center",
+            color="#ff7a18", fontsize=18, fontweight="bold", transform=ax.transAxes)
+    ax.text(.5, .42, "No historical playoff rows", ha="center", va="center",
+            color="#f8f9ff", fontsize=30, transform=ax.transAxes)
+    Path(previews).mkdir(parents=True, exist_ok=True)
+    fig.savefig(Path(previews) / "playoff-journey.png", dpi=150, facecolor="#05050a")
+    plt.close(fig)
+    return {"available": False, "synthetic": True, "wins": 0, "losses": 0,
+            "point_differential": 0, "series": []}
+
+
 def _generate_model_chapter(games, features, model_dir, charts, previews):
     import matplotlib
     matplotlib.use("Agg")
@@ -635,9 +771,11 @@ def _generate_model_chapter(games, features, model_dir, charts, previews):
             "illustrative": model_dir is None}
 
 
-def _write_story_manifest(space, season, revision, passing, model, synthetic):
+def _write_story_manifest(space, season, revision, playoffs, passing, model, synthetic):
     chapters = [
         {"id": "opening", "label": "Opening signal"},
+        {"id": "playoffs", "label": "Road to the title", "chart": "charts/playoff-journey.html",
+         "preview": "previews/playoff-journey.png"},
         {"id": "season", "label": "Season arc"},
         {"id": "opponents", "label": "Opponent gravity"},
         {"id": "passing", "label": "Teammate network", "chart": "charts/passing-lanes.html",
@@ -648,18 +786,31 @@ def _write_story_manifest(space, season, revision, passing, model, synthetic):
     ]
     _write_json(Path(space) / "story-manifest.json",
                 {"format_version": 1, "season": season, "dataset_revision": revision,
-                 "synthetic": synthetic, "chapters": chapters, "passing": passing,
+                 "synthetic": synthetic, "chapters": chapters, "playoffs": playoffs,
+                 "passing": passing,
                  "model": model, "disclosures": ["backtest only", "not causal",
                                                    "not betting advice"]})
 
 
-def _space_index(template, season, revision, games, mode_label="Historical extract",
-                 dataset_id=None):
+def _space_index(template, season, revision, games, playoffs=None,
+                 mode_label="Historical extract", dataset_id=None):
     wins = sum(x["wl"] == "W" for x in games)
+    playoffs = playoffs or {"available": False, "wins": 0, "losses": 0,
+                            "point_differential": 0}
+    playoff_available = playoffs.get("available", True)
     values = {"{{SEASON}}": season, "{{DATASET_REVISION}}": revision,
               "{{MODE_LABEL}}": mode_label, "{{CHART_COUNT}}": str(len(CHARTS)),
               "{{GAME_COUNT}}": str(len(games)), "{{WINS}}": str(wins),
               "{{LOSSES}}": str(len(games) - wins),
+              "{{PLAYOFF_WINS}}": str(playoffs["wins"]),
+              "{{PLAYOFF_LOSSES}}": str(playoffs["losses"]),
+              "{{PLAYOFF_MARGIN}}": f'{playoffs["point_differential"]:+d}',
+              "{{PLAYOFF_RECORD}}": (f'{playoffs["wins"]}–{playoffs["losses"]}'
+                                      if playoff_available else "Synthetic only"),
+              "{{PLAYOFF_HEADLINE}}": ("Sixteen wins. Fifty-three years."
+                                        if playoff_available else "No historical playoff claims."),
+              "{{PLAYOFF_COPY}}": ("Follow every series, every score, and the momentum swing that ended a 53-year championship wait."
+                                    if playoff_available else "The public teaching build contains no observed postseason rows; the authenticated research release carries the verified title run."),
               "{{CHART_TABS}}": "\n".join(
                   f'<button id="tab-{chart["slug"]}" role="tab" tabindex="{0 if index == 0 else -1}" '
                   f'aria-selected="{str(index == 0).lower()}" aria-controls="chart-panel" '
@@ -682,7 +833,8 @@ def _data_contract(table_paths):
     import polars as pl
     keys = {"games": ["season", "season_type", "game_id", "team_id"],
             "pregame_features": ["season", "game_id"], "monthly_summary": ["season", "month"],
-            "teams": ["season", "team_id"]}
+            "teams": ["season", "team_id"],
+            "playoff_games": ["season", "season_type", "game_id", "team_id"]}
     tables = {}
     for name, paths in table_paths.items():
         frame = pl.concat([pl.read_parquet(path) for path in paths], how="diagonal_relaxed")
@@ -712,7 +864,7 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
     if space_season not in seasons: raise ValueError("Space season must be included")
     output = Path(output)
     if output.exists(): raise FileExistsError("Use an empty output directory")
-    _, source, selected = load_current_release(root, seasons)
+    release, source, selected = load_current_release(root, seasons)
     builder = repository_state(repo)
     source_dirty = source.get("git_dirty") is not False
     commits_match = source.get("git_sha") == builder["git_sha"]
@@ -726,7 +878,8 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
         status = {"dataset_publishable": False, "space_publishable": False,
                   "publishable": False}
     dataset, space = output / "dataset", output / "space"; dataset.mkdir(parents=True)
-    paths = {name: [] for name in ("games", "pregame_features", "monthly_summary", "teams")}
+    paths = {name: [] for name in ("games", "pregame_features", "monthly_summary", "teams",
+                                   "playoff_games")}
     prepared, total = {}, 0
     for season in seasons:
         teams_path = resolve_team_dimension(teams_dir, season)
@@ -742,11 +895,19 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
         _write_json(meta / "coverage.json", selected[season]["coverage"])
         _write_json(meta / "source-manifest.json", source); shutil.copy2(teams_path, meta / "team-dimension.csv")
         prepared[season] = (games, features, monthly); total += len(games)
+    playoff_rows, playoff_coverage = load_playoff_partition(release, space_season)
+    playoff_teams_path = resolve_team_dimension(teams_dir, space_season)
+    playoff_games = enrich_games(playoff_rows, load_team_dimension(playoff_teams_path))
+    playoff_path = dataset / "data" / "playoff_games" / f"{space_season}.parquet"
+    _write_parquet(playoff_path, playoff_games); paths["playoff_games"].append(playoff_path)
+    playoff_meta = dataset / "metadata" / "seasons" / space_season
+    _write_json(playoff_meta / "playoff-coverage.json", playoff_coverage)
     _write_json(dataset / "metadata/data-contract.json", _data_contract(paths))
     (dataset / "README.md").write_text(_dataset_readme(seasons, total, gate["dataset_license"]), encoding="utf-8")
     common = {"format_version": 1, "built_at": source.get("built_at"),
               "synthetic": False, "usage_scope": "local_research_only",
-              "seasons": seasons, "rows": total, "source_release_id": source["release_id"],
+              "seasons": seasons, "rows": total, "postseason_rows": len(playoff_games),
+              "source_release_id": source["release_id"],
               "source_git_sha": source.get("git_sha"), "source_git_dirty": source.get("git_dirty"),
               "builder_git_sha": builder["git_sha"], "builder_git_dirty": builder["git_dirty"],
               "source_builder_commits_match": commits_match,
@@ -761,12 +922,14 @@ def build_hub_release(root, seasons, output, teams_dir, gate_path, space_source,
     (space / "README.md").write_text(_space_readme(space_season, dataset_revision), encoding="utf-8")
     _generate_d3(games, features, monthly, build_result_paths(games), space / "charts")
     _generate_previews(games, features, monthly, space / "previews")
+    playoffs = _generate_playoff_chapter(playoff_games, space / "charts", space / "previews")
     if passing_path is None:
         raise ValueError("A passing CSV is required for a real research release")
     passing = _generate_passing_chapter(passing_path, space / "charts", space / "previews")
     model = _generate_model_chapter(games, features, model_dir, space / "charts", space / "previews")
-    _write_story_manifest(space, space_season, dataset_revision, passing, model, False)
-    (space / "index.html").write_text(_space_index(template, space_season, dataset_revision, games), encoding="utf-8")
+    _write_story_manifest(space, space_season, dataset_revision, playoffs, passing, model, False)
+    (space / "index.html").write_text(
+        _space_index(template, space_season, dataset_revision, games, playoffs), encoding="utf-8")
     space_manifest = _write_payload_manifest(space, {**common, **status, "payload": "space", "space_season": space_season,
         "dataset_id": DATASET_ID, "dataset_revision": dataset_revision, "dataset_manifest_sha256": dataset_sha,
         "visualization": {"d3blocks": "2.3.4", "matplotlib": "3.11.2", "pandas": "2.3.3"}})
@@ -799,7 +962,8 @@ def validate_hub_release(output):
     chart_artifacts = tuple(
         f"{folder}/{chart['slug']}.{suffix}"
         for chart in CHARTS for folder, suffix in (("charts", "html"), ("previews", "png")))
-    story_artifacts = ("story-manifest.json", "charts/passing-lanes.html",
+    story_artifacts = ("story-manifest.json", "charts/playoff-journey.html",
+                       "previews/playoff-journey.png", "charts/passing-lanes.html",
                        "previews/passing-lanes.png", "charts/model-signal.html",
                        "previews/model-signal.png")
     space, space_errors = _validate_payload(
@@ -811,14 +975,23 @@ def validate_hub_release(output):
         errors.append("Space index does not link its dataset revision")
     try:
         import polars as pl
+        table_names = ["games", "pregame_features", "monthly_summary", "teams"]
+        if not dataset.get("synthetic"):
+            table_names.append("playoff_games")
         frames = {name: pl.concat([pl.read_parquet(x) for x in sorted((output / f"dataset/data/{name}").glob("*.parquet"))],
                                   how="diagonal_relaxed")
-                  for name in ("games", "pregame_features", "monthly_summary", "teams")}
+                  for name in table_names}
         games = frames["games"]
         if games.select(["season", "season_type", "game_id", "team_id"]).n_unique() != games.height:
             errors.append("games primary key is not unique")
         if games.schema["game_id"] != pl.String: errors.append("game_id is not text")
         if games.height != dataset["rows"]: errors.append("dataset manifest row count differs")
+        if not dataset.get("synthetic"):
+            playoff_games = frames["playoff_games"]
+            if playoff_games.height != dataset.get("postseason_rows"):
+                errors.append("dataset manifest postseason row count differs")
+            if playoff_games.select(["season", "season_type", "game_id", "team_id"]).n_unique() != playoff_games.height:
+                errors.append("playoff games primary key is not unique")
         for season in dataset["seasons"]:
             coverage = json.loads((output / f"dataset/metadata/seasons/{season}/coverage.json").read_text())
             observed = games.filter(pl.col("season") == season).height

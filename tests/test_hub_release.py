@@ -7,6 +7,7 @@ from pathlib import Path
 from knicks_history.hub_release import (
     build_monthly_summary,
     build_opponent_views,
+    build_playoff_journey,
     build_pregame_features,
     build_result_paths,
     enrich_games,
@@ -103,6 +104,34 @@ class HubReleaseTests(unittest.TestCase):
             for value in (row["home"], row["away"]):
                 self.assertTrue(value is None or 0 <= value <= 1)
 
+    def test_championship_journey_reconciles_series_and_margin(self):
+        series = (
+            ("ATL", "Atlanta Hawks", ("L", "W", "L", "W", "W", "W")),
+            ("PHI", "Philadelphia 76ers", ("W", "W", "W", "W")),
+            ("CLE", "Cleveland Cavaliers", ("W", "W", "W", "W")),
+            ("SAS", "San Antonio Spurs", ("W", "W", "L", "W", "W")),
+        )
+        rows, game = [], 0
+        loss_margins = iter((-5, -5, -11))
+        for abbrev, name, results in series:
+            for result in results:
+                game += 1
+                margin = 4 if game == 19 else (20 if result == "W" else next(loss_margins))
+                points = 94 if game == 19 else 110
+                rows.append({"season": "2025-26", "season_type": "Playoffs",
+                             "game_id": f"0042500{game:03d}", "game_date": f"2026-05-{game:02d}",
+                             "opponent_abbrev": abbrev, "opponent_name": name,
+                             "venue_side": "home" if game % 2 else "away", "wl": result,
+                             "pts": points, "opponent_pts": points - margin,
+                             "point_margin": margin})
+        journey = build_playoff_journey(rows)
+        self.assertEqual((journey["wins"], journey["losses"]), (16, 3))
+        self.assertEqual(journey["point_differential"], 283)
+        self.assertEqual([item["opponent"] for item in journey["series"]],
+                         ["ATL", "PHI", "CLE", "SAS"])
+        self.assertEqual(journey["longest_win_streak"], 13)
+        self.assertEqual(journey["milestone"]["game"], 18)
+
     def test_publication_gate_requires_complete_review(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "gate.toml"
@@ -177,10 +206,11 @@ class HubReleaseTests(unittest.TestCase):
             (root / "CURRENT").write_text(release_id)
             (release / "manifest.json").write_text(json.dumps({"synthetic": False}))
             with (release / "team_games.csv").open("w", newline="") as stream:
-                writer = csv.DictWriter(stream, fieldnames=("season", "game_id"))
+                writer = csv.DictWriter(stream, fieldnames=("season", "season_type", "game_id"))
                 writer.writeheader()
-                writer.writerows(({"season": "2019-20", "game_id": "a"},
-                                  {"season": "2020-21", "game_id": "b"}))
+                writer.writerows(({"season": "2019-20", "season_type": "Regular Season", "game_id": "a"},
+                                  {"season": "2020-21", "season_type": "Regular Season", "game_id": "b"},
+                                  {"season": "2020-21", "season_type": "Playoffs", "game_id": "c"}))
             with (release / "coverage.csv").open("w", newline="") as stream:
                 fields = ("season", "season_type", "expected_games", "status", "missing_opponent_rows")
                 writer = csv.DictWriter(stream, fieldnames=fields)

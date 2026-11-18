@@ -14,7 +14,9 @@ never be described as real when it is synthetic.
 
 ## Research Domains
 
-The implemented base is one Knicks team-game row per game. Pregame team features and
+The implemented base is one Knicks team-game row per game, with regular-season and
+postseason partitions kept explicit. The 2025–26 playoff partition supports a validated
+championship narrative; it is not mixed into regular-season features. Pregame team features and
 observed assister-to-scorer edges are implemented; the all-pass tracking adapter remains
 available but its upstream endpoint is currently unreachable. Player box scores, effective-dated rosters,
 play-by-play events, and dated injury or transaction events remain planned.

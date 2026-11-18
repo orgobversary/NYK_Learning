@@ -1,6 +1,8 @@
 # Weekly Private Research Operation
 
-The weekly job refreshes private research artifacts and the authenticated preview. It
+The weekly job refreshes private research artifacts and the authenticated preview. Team
+ingestion includes the coverage-verified 2025–26 postseason partition used by the
+championship chapter. It
 does not publish the Bucket, dataset, Space, or real rows publicly. The job exits without
 creating a release when the validated team and passing inputs are unchanged.
 
@@ -29,12 +31,13 @@ command argument, repository file, manifest, or Space variable.
 
 ## Promotion gates
 
-The job must complete source retrieval, exact season and assist reconciliation, edge schema checks,
+The job must complete source retrieval, exact regular-season, postseason, and assist
+reconciliation, edge schema checks,
 closed-manifest validation, chronological modeling, story generation, payload validation,
 and private Space upload before replacing `registry/latest-research.json` and
 `registry/latest-preview.json` through temporary files. A failure before promotion leaves
 both pointers unchanged; operators must compare both pointers after any interrupted job.
-The no-change gate hashes normalized `team_games.csv` rows and the semantic fields in the
+The no-change gate hashes all normalized `team_games.csv` rows, including playoffs, and the semantic fields in the
 combined assist-edge contract. Release IDs, build timestamps, and the per-fetch
 `retrieved_at` value are intentionally excluded; edge values, source hashes, relation
 types, and rights metadata remain inside the digest.

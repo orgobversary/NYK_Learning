@@ -66,6 +66,13 @@ figure:hover { transform:translateY(-3px); border-color:#5ce8ff66; }
 figure img { display:block; width:100%; aspect-ratio:16/9; object-fit:contain; }
 figcaption { padding:.8rem 1rem; color:#c7cbe0; font-size:.76rem; }
 .feature-chapter { min-height:auto; }
+.championship-chapter { padding-top:clamp(6rem,12vw,11rem); }
+.championship-lockup { display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; margin-bottom:2rem; }
+.championship-lockup strong { color:var(--orange); font:800 clamp(3rem,9vw,8rem)/.85 ui-monospace,SFMono-Regular,monospace; letter-spacing:-.08em; text-shadow:0 0 42px #ff7a1855; }
+.championship-lockup span { color:var(--muted); text-transform:uppercase; letter-spacing:.1em; font-size:.72rem; }
+.playoff-metrics { display:flex; flex-wrap:wrap; gap:.65rem; margin:-2.5rem 0 1.2rem; }
+.playoff-metrics span { padding:.7rem .9rem; border:1px solid #ff7a184c; border-radius:999px; color:#ffd8bc; background:#29130966; font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; }
+.playoff-metrics b { color:var(--orange); font-size:1rem; }
 .model-disclosure { display:flex; flex-wrap:wrap; gap:.6rem; margin:-2rem 0 1.2rem; }
 .model-disclosure span { padding:.55rem .75rem; border:1px solid #f24cff55; border-radius:999px; color:#f0bcf5; background:#200d2644; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; }
 .method-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
