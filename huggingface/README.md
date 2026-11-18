@@ -5,8 +5,9 @@ previews lives here. Real-data Parquet, HTML, PNG, models, and manifests belong 
 ignored `build/` or in the approved private research Bucket. Raw research is never put
 in Git or the synthetic Hugging Face dataset repository.
 
-The story produces eight coordinated team views, a five-season teammate Sankey, a model
-lab, and a methods chapter. Interactive D3Blocks artifacts have portable static fallbacks.
+The seven-chapter story produces eight coordinated team views, a verified 2025–26
+championship timeline, a five-season teammate Sankey, a model lab, and a methods chapter.
+Interactive artifacts have portable Matplotlib fallbacks.
 
 ## Fast local review
 
@@ -43,7 +44,7 @@ Use Python 3.11–3.13 for the pinned visualization stack:
 
 ```bash
 python -m pip install -e '.[research,visualization]'
-python scripts/import_team_logs.py --start 2026 --end 2026 --root data/live
+python scripts/import_team_logs.py --start 2026 --end 2026 --playoffs-year 2026 --root data/live
 knicks build --root data/live --expected config/expected-live.csv --parquet
 ```
 
@@ -62,15 +63,18 @@ python scripts/validate_hf_release.py build/huggingface
 python -m http.server 8000 --bind 127.0.0.1 --directory build/huggingface/space
 ```
 
-`--allow-dirty` always produces a non-publishable local preview. Each payload has a closed
-`release-manifest.json`; missing, modified, and unexpected files fail validation.
+`--allow-dirty` always produces a non-publishable local preview. The real builder requires
+the coverage-verified 2025–26 playoff partition and validates its 19-game series path,
+16–3 record, and aggregate milestones before rendering the title chapter. Each payload
+has a closed `release-manifest.json`; missing, modified, and unexpected files fail validation.
 
 ## Cumulative seasons
 
 Repeat `--season` to build a cumulative local research dataset. Every selected season
 must have `count_matches` coverage. A reviewed `config/teams/<season>.csv` takes
 precedence; otherwise the builder uses `config/teams/common.csv`. `--space-season`
-chooses the single season displayed by the local gallery.
+chooses the single regular season displayed by the gallery and, for `2025-26`, the
+associated playoff chapter.
 
 ## Private research deployment
 

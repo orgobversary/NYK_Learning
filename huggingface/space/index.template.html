@@ -14,11 +14,12 @@
     <div class="arena-glow arena-glow--magenta" aria-hidden="true"></div>
     <nav class="story-rail" aria-label="Story chapters">
       <a href="#opening" aria-label="Opening signal"><span>01</span></a>
-      <a href="#season" aria-label="Season arc"><span>02</span></a>
-      <a href="#opponents" aria-label="Opponent gravity"><span>03</span></a>
-      <a href="#passing" aria-label="Teammate network"><span>04</span></a>
-      <a href="#models" aria-label="Model lab"><span>05</span></a>
-      <a href="#methods" aria-label="Methods and provenance"><span>06</span></a>
+      <a href="#playoffs" aria-label="Road to the championship"><span>02</span></a>
+      <a href="#season" aria-label="Season arc"><span>03</span></a>
+      <a href="#opponents" aria-label="Opponent gravity"><span>04</span></a>
+      <a href="#passing" aria-label="Teammate network"><span>05</span></a>
+      <a href="#models" aria-label="Model lab"><span>06</span></a>
+      <a href="#methods" aria-label="Methods and provenance"><span>07</span></a>
     </nav>
     <main id="story">
       <header id="opening" class="hero story-chapter" data-chapter="opening">
@@ -38,12 +39,19 @@
           <div><dt>Losses</dt><dd>{{LOSSES}}</dd><span>observed outcomes</span></div>
           <div><dt>Views</dt><dd>{{CHART_COUNT}}</dd><span>interactive lenses</span></div>
         </dl>
-        <a class="scroll-cue" href="#season">Enter the story <span aria-hidden="true">↓</span></a>
+        <a class="scroll-cue" href="#playoffs">Enter the story <span aria-hidden="true">↓</span></a>
       </header>
+
+      <section id="playoffs" class="story-chapter feature-chapter championship-chapter" data-chapter="playoffs" aria-labelledby="playoffs-title">
+        <div class="championship-lockup"><p class="eyebrow">2026 NBA champions</p><strong>{{PLAYOFF_RECORD}}</strong><span>{{PLAYOFF_MARGIN}} point differential</span></div>
+        <div class="chapter-heading"><p class="chapter-number">Chapter 02 / Road to the title</p><h2 id="playoffs-title">{{PLAYOFF_HEADLINE}}</h2><p>{{PLAYOFF_COPY}}</p></div>
+        <div class="playoff-metrics" aria-label="Postseason totals"><span><b>{{PLAYOFF_WINS}}</b> playoff wins</span><span><b>{{PLAYOFF_LOSSES}}</b> playoff losses</span><span><b>{{PLAYOFF_MARGIN}}</b> point differential</span></div>
+        <div class="feature-frame"><iframe title="2026 Knicks championship journey" src="charts/playoff-journey.html" loading="eager"></iframe><a href="previews/playoff-journey.png">Open static championship preview</a></div>
+      </section>
 
       <section id="season" class="story-chapter" data-chapter="season" aria-labelledby="season-title">
         <div class="chapter-heading">
-          <p class="chapter-number">Chapter 02 / Season arc</p>
+          <p class="chapter-number">Chapter 03 / Season arc</p>
           <h2 id="season-title">Momentum leaves a <span>trace.</span></h2>
           <p>Move through the release one analytical lens at a time. The chart surface stays inspectable, keyboard-accessible, and backed by a portable static fallback.</p>
         </div>
@@ -62,23 +70,23 @@
       </section>
 
       <section id="opponents" class="story-chapter" data-chapter="opponents" aria-labelledby="opponents-title">
-        <div class="chapter-heading"><p class="chapter-number">Chapter 03 / Opponent gravity</p><h2 id="opponents-title">Every matchup bends the <span>shape.</span></h2><p>The portable preview wall preserves the analytical record beyond any one browser or chart runtime.</p></div>
+        <div class="chapter-heading"><p class="chapter-number">Chapter 04 / Opponent gravity</p><h2 id="opponents-title">Every matchup bends the <span>shape.</span></h2><p>The portable preview wall preserves the analytical record beyond any one browser or chart runtime.</p></div>
         <div class="preview-grid">{{PREVIEW_CARDS}}</div>
       </section>
 
       <section id="passing" class="story-chapter feature-chapter" data-chapter="passing" aria-labelledby="passing-title">
-        <div class="chapter-heading"><p class="chapter-number">Chapter 04 / Teammate network</p><h2 id="passing-title">The ball reveals the <span>network.</span></h2><p>Five seasons of directed teammate relationships, density-limited for legibility. The story manifest names the observed measure; complete research rows remain private.</p></div>
+        <div class="chapter-heading"><p class="chapter-number">Chapter 05 / Teammate network</p><h2 id="passing-title">The ball reveals the <span>network.</span></h2><p>Five seasons of directed teammate relationships, density-limited for legibility. The story manifest names the observed measure; complete research rows remain private.</p></div>
         <div class="feature-frame"><iframe title="Five-season teammate relationship network" src="charts/passing-lanes.html" loading="lazy"></iframe><a href="previews/passing-lanes.png">Open static network preview</a></div>
       </section>
 
       <section id="models" class="story-chapter feature-chapter" data-chapter="models" aria-labelledby="models-title">
-        <div class="chapter-heading"><p class="chapter-number">Chapter 05 / Model lab</p><h2 id="models-title">Prediction, with the lights <span>on.</span></h2><p>Chronological backtests compare interpretable models with dummy baselines. No causal claims. No betting advice. No hidden target leakage.</p></div>
+        <div class="chapter-heading"><p class="chapter-number">Chapter 06 / Model lab</p><h2 id="models-title">Prediction, with the lights <span>on.</span></h2><p>Chronological backtests compare interpretable models with dummy baselines. No causal claims. No betting advice. No hidden target leakage.</p></div>
         <div class="model-disclosure"><span>Pregame only</span><span>Time-aware split</span><span>Baseline visible</span><span>Uncertainty reported</span></div>
         <div class="feature-frame"><iframe title="Backtested model signal" src="charts/model-signal.html" loading="lazy"></iframe><a href="previews/model-signal.png">Open static model preview</a></div>
       </section>
 
       <section id="methods" class="story-chapter methods" data-chapter="methods" aria-labelledby="methods-title">
-        <div class="chapter-heading"><p class="chapter-number">Chapter 06 / Methods</p><h2 id="methods-title">Every claim keeps its <span>receipt.</span></h2></div>
+        <div class="chapter-heading"><p class="chapter-number">Chapter 07 / Methods</p><h2 id="methods-title">Every claim keeps its <span>receipt.</span></h2></div>
         <div class="method-grid"><article><p class="eyebrow">Feature timing</p><h3>Before tipoff</h3><p>Rolling features stop at the previous completed game. Targets never enter the model inputs.</p></article><article><p class="eyebrow">Release integrity</p><h3>Closed manifests</h3><p>Unexpected, missing, or modified artifacts invalidate the complete release.</p></article><article><p class="eyebrow">Research boundary</p><h3>Private by default</h3><p>Real rows and real-data visuals remain authenticated until an explicit public review.</p></article></div>
       </section>
 

@@ -77,7 +77,7 @@ def main():
         run(["uv", "pip", "install", "--python", sys.executable,
              "-e", ".[research,visualization]"], repo)
         run([sys.executable, "scripts/import_team_logs.py", "--start", "2018", "--end", "2026",
-             "--root", str(data_root)], repo)
+             "--playoffs-year", "2026", "--root", str(data_root)], repo)
         run([sys.executable, "-m", "knicks_history.cli", "build", "--root", str(data_root),
              "--expected", "config/expected-live.csv", "--parquet"], repo)
         for season in PASSING_SEASONS:

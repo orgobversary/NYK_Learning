@@ -69,17 +69,23 @@ The local season archive is generated and ignored by Git. To load regular season
 
 ```bash
 python -m pip install -e '.[columnar]'
-python scripts/import_team_logs.py --start 2018 --end 2026 --root data/live
+python scripts/import_team_logs.py --start 2018 --end 2026 --playoffs-year 2026 --root data/live
 knicks build --root data/live --expected config/expected-live.csv --parquet
 ```
 
-The source uses the season ending year (`2018` means `2017-18`). The importer filters game IDs to regular-season games, preserves source provenance, and validates each season through the same archive pipeline as the NBA Stats adapter. Counts reflect NBA schedule changes, including 66 games in 2019–20 and 72 in 2020–21. Confirm source permissions and historical accuracy before redistributing exports.
+The source uses the season ending year (`2018` means `2017-18`). Regular-season imports
+filter game IDs to the `002` prefix; repeatable `--playoffs-year` selections import the
+`004` postseason partition. Both preserve source provenance and pass through the same
+archive pipeline as the NBA Stats adapter. Counts reflect NBA schedule changes, including
+66 games in 2019–20 and 72 in 2020–21. Confirm source permissions and historical accuracy
+before redistributing exports.
 
 ## Local research warehouse and public demonstrations
 
-The research builder turns immutable seasons and normalized teammate edges into Parquet
-tables, eight team views, a relationship Sankey, a model lab, and static fallbacks. Real rows
-and derived artifacts are private research material. For an authorized local build:
+The research builder turns immutable seasons, the verified 2025–26 postseason, and
+normalized teammate edges into Parquet tables, eight team views, a championship timeline,
+a relationship Sankey, a model lab, and static fallbacks. Real rows and derived artifacts
+are private research material. For an authorized local build:
 
 ```bash
 python -m pip install -e '.[research,visualization]'

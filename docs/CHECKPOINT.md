@@ -1,6 +1,6 @@
 # Project Checkpoint
 
-Date: 2026-11-17. The commit containing this file is the NYK World V2 private-research
+Date: 2026-11-18. The commit containing this file is the NYK World V2 private-research
 checkpoint for future work in this directory.
 
 ## Repository Topology
@@ -14,13 +14,15 @@ checkpoint for future work in this directory.
 ## Implemented
 
 - Replayable team-game ETL with coverage, checksums, corrections, and Parquet exports.
-- Nine-season team backfill contract and exact per-season coverage checks.
-- Eight team charts, a five-season teammate Sankey, and Matplotlib fallbacks.
+- Nine-season team backfill contract, an explicit 2025–26 playoff partition, and exact
+  regular-season and postseason coverage checks.
+- Eight team charts, a 19-game championship timeline, a five-season teammate Sankey,
+  and Matplotlib fallbacks.
 - Private all-pass adapter plus a documented play-by-play assist fallback with exact
   reconciliation, stable player IDs, source hashes, and explicit relation semantics.
 - Interpretable win and margin models with time-aware validation, dummy baselines,
   uncertainty intervals, model cards, coefficients, and predictions.
-- Six-chapter dark story UI, closed manifests, responsive browser checks, immutable
+- Seven-chapter dark story UI, closed manifests, responsive browser checks, immutable
   private release staging, Bucket sync, and weekly HF Job orchestration.
 - Local chronological team models trained successfully on 436 train, 77 validation, and
   154 test rows. Treat the weak held-out results as an honest baseline, not a claim of
@@ -32,7 +34,9 @@ The NBA Stats all-pass endpoint timed out in both environments, but the document
 third-party historical archive supplies play-by-play-derived game events. Five seasons of
 observed assister-to-scorer edges now reconcile exactly to team-assist totals: 1,793,
 1,880, 1,998, 2,254, and 2,250. A 712-game local research preview with 935 season-edge
-rows, 10,175 assisted makes, and the trained model passed closed-manifest and browser QA.
+rows, 10,175 assisted makes, 19 postseason games, and the trained model passed
+closed-manifest and browser QA. The playoff chapter independently reconciles the 16–3
+series path, +283 point differential, 13-game win streak, and 94–90 Finals closeout.
 The same fallback then completed end to end in Hugging Face Jobs. The promoted private
 release is `20261117T215020Z-3a950058`; a repeated run proved the semantic no-change path,
 and the Monday schedule is active.

@@ -10,6 +10,7 @@ from knicks_history.hub_release import (
     _generate_previews,
     _generate_model_chapter,
     _generate_passing_chapter,
+    _generate_synthetic_playoff_placeholder,
     _space_index,
     _space_readme,
     _write_json,
@@ -105,10 +106,11 @@ def main():
     _generate_previews(games, features, monthly, space / "previews")
     passing = _generate_passing_chapter(Path("fixtures/passing-demo.csv"),
                                         space / "charts", space / "previews")
+    playoffs = _generate_synthetic_playoff_placeholder(space / "charts", space / "previews")
     model = _generate_model_chapter(games, features, None, space / "charts", space / "previews")
-    _write_story_manifest(space, "2024-25", args.dataset_revision, passing, model, True)
+    _write_story_manifest(space, "2024-25", args.dataset_revision, playoffs, passing, model, True)
     (space / "index.html").write_text(
-        _space_index(template, "2024-25", args.dataset_revision, games,
+        _space_index(template, "2024-25", args.dataset_revision, games, playoffs,
                      "SYNTHETIC DEMONSTRATION", dataset_id),
         encoding="utf-8")
     from knicks_history.hub_release import digest, MANIFEST_NAME

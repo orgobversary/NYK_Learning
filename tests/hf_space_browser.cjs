@@ -33,12 +33,13 @@ async function inspectPage(page, label) {
   const tabs = page.locator('[role="tab"]');
   assert.equal(await tabs.count(), 8);
   assert.match(await page.locator('.metrics').innerText(), new RegExp(expectedGames));
-  assert.equal(await page.locator('.story-rail a').count(), 6);
+  assert.equal(await page.locator('.story-rail a').count(), 7);
+  await page.getByRole('heading', { name: /(?:Sixteen wins|No historical playoff claims)/ }).waitFor();
   await page.getByRole('heading', { name: /The ball reveals the network/ }).waitFor();
   await page.getByRole('heading', { name: /Prediction, with the lights on/ }).waitFor();
 
   const story = await page.evaluate(async () => (await fetch('story-manifest.json')).json());
-  assert.equal(story.chapters.length, 6);
+  assert.equal(story.chapters.length, 7);
   assert.equal(story.synthetic, expectedSynthetic);
 
   const frame = page.locator('#chart-frame');
@@ -64,7 +65,7 @@ async function inspectPage(page, label) {
   assert.match(await frame.getAttribute('src'), /matchup-grid\.html/);
   const provenance = page.getByRole('link', { name: /(?:Build manifest|Synthetic dataset and provenance)/ });
   assert.ok(await provenance.getAttribute('href'));
-  for (const source of ['passing-lanes.html', 'model-signal.html']) {
+  for (const source of ['playoff-journey.html', 'passing-lanes.html', 'model-signal.html']) {
     const feature = page.locator(`.feature-frame iframe[src$="${source}"]`);
     await feature.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
