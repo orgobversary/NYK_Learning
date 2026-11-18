@@ -8,13 +8,13 @@ creating a release when the validated team and passing inputs are unchanged.
 
 ## Current operational status
 
-The schedule is **active**. On 2026-11-17, the documented play-by-play fallback completed
-multiple clean Hugging Face Jobs after the NBA Stats all-pass endpoint timed out. Release
-`20261117T215020Z-3a950058` was built from Git commit `8b5ea64`, promoted to the private
-Space, downloaded again, and passed closed-manifest plus desktop, mobile, and 200% browser
-checks. Follow-up Job `6afccc2f884144d2f44f87ef` detected unchanged semantic inputs and
-exited before modeling or publication. Never describe assist edges as all passes and never
-replace an unavailable observed network with synthetic edges.
+The schedule is **active**. On 2026-11-18, Job `6afdd7bce41aae15936ca688`
+promoted release `20261118T165300Z-faf0f07d` from Git commit `0d8db9e` and Space
+commit `815005e`. The exact Space revision was downloaded and passed closed-payload plus
+desktop, mobile, and 200% browser checks. Follow-up Job
+`6afdd814e41aae15936ca6ac` detected unchanged semantic inputs and exited before modeling
+or publication. Never describe assist edges as all passes and never replace an unavailable
+observed network with synthetic edges.
 
 ## Infrastructure
 

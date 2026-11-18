@@ -38,8 +38,10 @@ rows, 10,175 assisted makes, 19 postseason games, and the trained model passed
 closed-manifest and browser QA. The playoff chapter independently reconciles the 16–3
 series path, +283 point differential, 13-game win streak, and 94–90 Finals closeout.
 The same fallback then completed end to end in Hugging Face Jobs. The promoted private
-release is `20261117T215020Z-3a950058`; a repeated run proved the semantic no-change path,
-and the Monday schedule is active.
+release is `20261118T165300Z-faf0f07d`, built from source commit `0d8db9e` and deployed
+as Space commit `815005e`. The exact downloaded revision passed closed-payload and
+three-viewport browser QA; a repeated run proved the semantic no-change path, and the
+Monday schedule is active.
 
 ## Research Boundary
 
