@@ -28,11 +28,11 @@ user-owned guide and was deliberately left untouched.
 - `obversarystudios/nyk-world-research` remains the private raw-evidence Bucket.
 - The older private synthetic `obversarystudios/nyk-world-data` must remain untouched.
 
-Both Spaces remain private. The article work is committed locally in the Space checkout as
-`ba3ecde`, but its push was blocked because no Hugging Face credential is available in this
-environment; the remote Space therefore remains unchanged. The new analytics dataset could
-not be created because `hf auth whoami` reported no active login. No real public rows, Hub
-pull requests, merges, visibility changes, or public releases have occurred.
+Both Spaces remain private. The article work is committed and synchronized to the article
+Space as `ba3ecde`. The Hugging Face CLI is authenticated as `obversarystudios`, but the new
+analytics dataset has not been created because the public release gate remains disabled and
+activation has not been approved. No real public rows, Hub pull requests, merges, visibility
+changes, or public releases have occurred.
 
 ## Public Data Contract
 
@@ -156,7 +156,7 @@ npm run check:embed -- nyk-world/model-signal.html --data /data/nyk-world/model_
 ## Next Safe Phase: Credential-Backed Activation
 
 1. Recheck both worktrees and review the complete diffs.
-2. Authenticate `hf` locally or configure the scoped Environment token without exposing it.
+2. Reconfirm the active Hugging Face account and scoped Environment token without exposing it.
 3. Create/confirm the private `obversarystudios/nyk-world-analytics` dataset.
 4. Review current BALLDONTLIE terms and document the review date, reviewer, and basis.
 5. Set only `public_release_enabled = true` after explicit owner approval.
