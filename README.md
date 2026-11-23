@@ -160,4 +160,10 @@ the same checksum manifest. See [Public Analytics Checkpoints](docs/PUBLIC_ANALY
 
 ## License
 
-Original code and invented fixture: MIT, see [LICENSE](LICENSE). This does not grant redistribution rights for third-party NBA data. Document source permissions and historical coverage before using real extracts in local research.
+Original software is licensed under
+[AGPL-3.0-or-later](LICENSES/AGPL-3.0-or-later.txt). Original documentation,
+article prose, visual designs, and invented teaching fixtures are licensed under
+[CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt). See [LICENSE](LICENSE) for the exact
+scope. These licenses do not grant redistribution rights for third-party NBA
+data. Document source permissions and historical coverage before using real
+extracts in local research.

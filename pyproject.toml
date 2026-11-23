@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "knicks-history"
 version = "0.1.0"
 description = "Replayable Knicks team-game ETL with explicit historical coverage"
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.11"
 dependencies = []
 

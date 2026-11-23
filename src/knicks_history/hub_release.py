@@ -413,16 +413,16 @@ and `teams` contains reviewed season-specific labels. Machine-readable grain, ke
 types, nullability, feature timing, provenance, and SHA-256 inventory are under
 `metadata/`. Game IDs remain text and features use at most five prior games.
 
-Original code is MIT licensed. `license: {license_name}` records that the code license
-does not grant rights to third-party basketball facts. Do not upload this payload. It
-contains no player or tracking data, causal claims, predictive model, or official
-league artwork.
+Original software is licensed under AGPL-3.0-or-later. `license: {license_name}` records
+the data license selected for this local payload; the software license does not grant
+rights to third-party basketball facts. Do not upload this payload. It contains no player
+or tracking data, causal claims, predictive model, or official league artwork.
 '''
 
 
 def _synthetic_dataset_readme(season, rows):
     return f'''---
-license: mit
+license: cc-by-sa-4.0
 pretty_name: NYK World Synthetic Demo
 configs:
   - config_name: games
@@ -442,7 +442,8 @@ tags: [synthetic, basketball, data-engineering, visualization]
 An invented {rows}-game {season} fixture used to demonstrate the NYK Learning ETL,
 contracts, D3Blocks gallery, and Matplotlib fallbacks. Every team label, score, and game
 fact in this dataset is synthetic. It is not NBA data and must not be used for factual
-basketball analysis. Source code and this invented fixture are MIT licensed.
+basketball analysis. Original software is licensed under AGPL-3.0-or-later, and this
+invented teaching fixture is licensed under CC BY-SA 4.0.
 '''
 
 
@@ -459,7 +460,7 @@ colorTo: indigo
 sdk: static
 app_file: index.html
 pinned: true
-license: mit
+license: agpl-3.0
 {dataset_metadata}short_description: Interactive {season} Knicks team-game visualizations
 disable_embedding: false
 ---

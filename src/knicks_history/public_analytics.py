@@ -82,9 +82,10 @@ terms-review basis, checksums, and limitations for the exact checkpoint.
 
 This dataset is best-effort historical research, not an official record, live feed, or
 betting product. The models are descriptive portfolio demonstrations and do not establish
-causality. Original pipeline code is MIT licensed; third-party facts remain subject to the
-source terms linked from the manifest. This project is not affiliated with or endorsed by
-the NBA or New York Knicks.
+causality. Original pipeline software is licensed under AGPL-3.0-or-later; original
+documentation and visual design are licensed under CC BY-SA 4.0. Third-party facts remain
+subject to the source terms linked from the manifest. This project is
+not affiliated with or endorsed by the NBA or New York Knicks.
 """
 
 

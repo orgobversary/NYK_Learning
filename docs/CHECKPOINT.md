@@ -71,6 +71,14 @@ the private Bucket and opens three Hub review PRs. Uploads delete stale files in
 reviewed target scope before adding the new closed payload. The workflow never merges PRs
 or changes visibility.
 
+## Licensing
+
+As of 2026-11-23, original software is licensed under AGPL-3.0-or-later. Original
+documentation, article prose, visual designs, and invented teaching fixtures are licensed
+under CC BY-SA 4.0. These licenses cover only material for which Obversary Studios owns the
+relevant rights; provider data, trademarks, dependencies, and upstream template material
+remain governed by their own terms. See `LICENSE` and `LICENSES/`.
+
 ## Policy Gates
 
 `config/public-analytics.toml` is the controlling public policy and currently has
