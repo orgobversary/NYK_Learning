@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#070a12" />
+    <title>NYK World · Visual Explorer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#visual">Skip to visualization</a>
+    <header class="masthead">
+      <a class="wordmark" href="./" aria-label="NYK World home"><span>NYK</span> WORLD</a>
+      <nav aria-label="Project destinations">
+        <a href="https://huggingface.co/spaces/obversarystudios/NYKnicks_World">Read the article</a>
+        <a href="https://huggingface.co/datasets/obversarystudios/nyk-world-analytics">Data &amp; provenance</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">Independent basketball research / versioned evidence</p>
+        <h1>One history.<br /><em>Many views.</em></h1>
+        <p class="lede">Explore nine completed seasons and every postseason run through the same reviewed game observations.</p>
+        <div class="release" id="release-status" role="status">Loading release manifest…</div>
+      </section>
+
+      <section class="controls" aria-label="Visualization controls">
+        <label>Season<select id="season-select" disabled><option>Loading…</option></select></label>
+        <label>Phase<select id="phase-select" disabled><option value="Regular Season">Regular season</option><option value="Playoffs">Playoffs</option></select></label>
+        <div class="view-tabs" role="tablist" aria-label="Choose a view">
+          <button role="tab" aria-selected="true" data-view="pulse">Season pulse</button>
+          <button role="tab" aria-selected="false" data-view="opponents">Opponent gravity</button>
+          <button role="tab" aria-selected="false" data-view="flow">Result flow</button>
+          <button role="tab" aria-selected="false" data-view="playoffs">Playoff path</button>
+          <button role="tab" aria-selected="false" data-view="models">Model lab</button>
+        </div>
+      </section>
+
+      <section id="visual" class="visual-shell" aria-labelledby="visual-title">
+        <div class="visual-heading">
+          <div><p class="eyebrow" id="visual-kicker">Season pulse</p><h2 id="visual-title">Momentum leaves a trace.</h2></div>
+          <p id="visual-description">Game scores and cumulative point margin, ordered through the selected season.</p>
+        </div>
+        <div id="chart" class="chart" role="img" aria-live="polite" aria-label="Loading visualization"></div>
+        <p id="chart-note" class="chart-note"></p>
+      </section>
+
+      <section class="metric-grid" aria-label="Selected season summary">
+        <article><span>Games</span><strong id="metric-games">—</strong></article>
+        <article><span>Record</span><strong id="metric-record">—</strong></article>
+        <article><span>Mean margin</span><strong id="metric-margin">—</strong></article>
+        <article><span>Release</span><strong id="metric-release">—</strong></article>
+      </section>
+
+      <section class="methods">
+        <p class="eyebrow">Reading the evidence</p>
+        <h2>The viewer is not the explanation.</h2>
+        <p>The companion article documents source terms, validation, feature timing, modeling limits, and the meaning of each chart. This surface is intentionally focused on exploration.</p>
+        <a class="primary" href="https://huggingface.co/spaces/obversarystudios/NYKnicks_World">Open the read-along article →</a>
+      </section>
+    </main>
+
+    <footer>
+      <p>Independent and unofficial. Not affiliated with or endorsed by the NBA or New York Knicks. No betting advice.</p>
+      <a href="data/release-manifest.json">Release manifest</a>
+    </footer>
+  </body>
+</html>

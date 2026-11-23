@@ -1,0 +1,31 @@
+version = 1
+provider = "balldontlie"
+api_root = "https://api.balldontlie.io/nba/v1"
+terms_url = "https://www.balldontlie.io/terms.html"
+public_dataset = "obversarystudios/nyk-world-analytics"
+private_research_bucket = "obversarystudios/nyk-world-research"
+viewer_space = "obversarystudios/nyk_world"
+article_space = "obversarystudios/NYKnicks_World"
+
+# Production activation is deliberately owner-controlled. The checkpoint workflow
+# still requires a fresh reviewer, review date, and basis for every dispatch.
+public_release_enabled = false
+allowed_public_payload = "minimal_game_values_and_derived_aggregates"
+raw_provider_responses_public = false
+provider_identifiers_public = false
+player_statistics_public = false
+automatic_merge_enabled = false
+automatic_visibility_change_enabled = false
+
+[initial_scope]
+first_season = "2017-18"
+last_season = "2025-26"
+include_regular_season = true
+include_playoffs = true
+include_current_incomplete_season = false
+
+[presentation]
+independent_unofficial_disclosure = true
+league_or_team_logos = false
+player_photos = false
+betting_content = false

@@ -23,6 +23,12 @@ play-by-play events, and dated injury or transaction events remain planned.
 `config/research-domains.toml` records
 the grain, status, and ignored local root for every domain.
 
+The optional private NBA Stats lake uses Ingestify for raw-file revisions and `nba_api` for
+NBA.com transport. It is an operational cache and provenance layer, not a new data source or
+a publication basis. Its adapter currently covers only league team-game logs; source calls
+are serial, seasons are explicit, and cached raw bytes still pass through the existing ETL
+validator before becoming a local release.
+
 Use stable identifiers rather than names as keys. Preserve raw responses and retrieval
 metadata under ignored `data/research/`; normalize into immutable releases; derive
 features only from information available before the target event. Keep observations,

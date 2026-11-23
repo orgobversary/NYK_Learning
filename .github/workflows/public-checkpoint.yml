@@ -1,0 +1,100 @@
+name: NYK public analytics checkpoint
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_year:
+        description: Season start year (2017 means 2017-18)
+        required: true
+        default: '2017'
+      end_year:
+        description: Final completed season start year
+        required: true
+        default: '2025'
+      terms_reviewed_at:
+        description: ISO date of the current provider-terms review
+        required: true
+      terms_reviewed_by:
+        description: Named human reviewer
+        required: true
+      terms_basis:
+        description: Short source-specific publication basis
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nyk-public-checkpoint
+  cancel-in-progress: false
+
+jobs:
+  build-and-stage:
+    runs-on: ubuntu-24.04
+    environment: nyk-public-release
+    env:
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN_NYK_PUBLISH }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install checkpoint dependencies
+        run: |
+          python -m pip install -e '.[ml]'
+          python -m pip install 'huggingface_hub>=2,<3'
+      - name: Run offline contracts
+        run: python -m unittest discover -s tests -v
+      - name: Require explicit source-policy activation
+        run: |
+          python - <<'PY'
+          import tomllib
+          with open('config/public-analytics.toml', 'rb') as stream:
+              policy = tomllib.load(stream)
+          if policy.get('public_release_enabled') is not True:
+              raise SystemExit('Public analytics policy is not owner-activated')
+          if policy.get('automatic_merge_enabled') or policy.get('automatic_visibility_change_enabled'):
+              raise SystemExit('Automatic merge and visibility changes must remain disabled')
+          PY
+      - name: Build closed real-data checkpoint
+        env:
+          CHECKPOINT_START_YEAR: ${{ inputs.start_year }}
+          CHECKPOINT_END_YEAR: ${{ inputs.end_year }}
+          CHECKPOINT_REVIEWED_AT: ${{ inputs.terms_reviewed_at }}
+          CHECKPOINT_REVIEWED_BY: ${{ inputs.terms_reviewed_by }}
+          CHECKPOINT_TERMS_BASIS: ${{ inputs.terms_basis }}
+        run: |
+          python scripts/build_public_checkpoint.py \
+            --output build/public/analytics \
+            --start "$CHECKPOINT_START_YEAR" \
+            --end "$CHECKPOINT_END_YEAR" \
+            --terms-reviewed-at "$CHECKPOINT_REVIEWED_AT" \
+            --terms-basis "$CHECKPOINT_REVIEWED_BY: $CHECKPOINT_TERMS_BASIS"
+      - name: Verify public payload and private-source separation
+        run: python scripts/validate_public_checkpoint.py build/public
+      - name: Archive raw source only in the private Bucket
+        run: |
+          hf sync build/public/private-source \
+            hf://buckets/obversarystudios/nyk-world-research/public-source/${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Create or retain private analytics dataset
+        run: hf repos create obversarystudios/nyk-world-analytics --type dataset --private --exist-ok
+      - name: Open review pull requests without merging
+        run: |
+          hf upload obversarystudios/nyk-world-analytics build/public/analytics . \
+            --type dataset --create-pr --delete '*' \
+            --commit-message 'Stage NYK public analytics checkpoint'
+          hf upload obversarystudios/nyk_world build/public/viewer-space . \
+            --type space --create-pr --delete '*' \
+            --commit-message 'Stage NYK visual explorer checkpoint'
+          hf upload obversarystudios/NYKnicks_World build/public/article-data app/src/content/assets/data/nyk-world \
+            --type space --create-pr --delete 'app/src/content/assets/data/nyk-world/*' \
+            --commit-message 'Bind article to NYK analytics checkpoint'
+      - name: Write checkpoint summary
+        run: |
+          echo '### NYK checkpoint staged for review' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Raw source: private Bucket only' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Dataset and Space changes: Hugging Face pull requests only' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Merge and public visibility: manual and disabled here' >> "$GITHUB_STEP_SUMMARY"

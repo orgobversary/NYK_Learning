@@ -110,6 +110,20 @@ knicks build --root data/live --expected config/expected-live.csv --parquet
 
 The live adapter is opt-in; no scheduled NBA job is installed. Inspect the source response, run manifest and coverage. Endpoint access and historical accuracy require live verification. Zero rows are not proof of zero games. Keep synthetic and real roots separate.
 
+For a revisioned private raw-data lake, install `python -m pip install -e '.[lake]'`,
+copy `config/ingestify-nba.example.yaml` to an ignored/local configuration, choose explicit
+season selectors, and run `python scripts/archive_ingestify_nba.py --config <local-config>
+--root data/live`. Ingestify controls raw-response caching; `nba_api` performs the deferred
+NBA.com request; the existing archive pipeline still validates and releases the rows. The
+example uses a 30-day refresh window, serial source concurrency, and ignored local storage.
+Do not treat successful retrieval as permission to redistribute NBA.com data. Ingestify is
+AGPL-licensed, so review its obligations before distributing a combined application.
+The adapter retries transport timeouts and connection failures only. HTML responses, empty
+objects, missing named datasets, and schema drift fail immediately instead of being cached
+or misreported as an empty season. Do not build new research features on endpoints listed as
+failing or removed in the installed `nba_api` documentation; use the documented replacement,
+usually the V3 endpoint, when one exists.
+
 For controlled backfills, read `python scripts/backfill.py --help`. Begin with a few seasons. `config/coverage-plan.csv` is an audit checklist, not a completeness claim.
 
 ## 8. GitHub workflow

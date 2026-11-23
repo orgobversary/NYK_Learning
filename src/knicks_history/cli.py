@@ -1,26 +1,13 @@
 import argparse
 import importlib.metadata
 import json
-import time
 from pathlib import Path
+from .nba_client import fetch_league_game_log
 from .pipeline import KINDS, archive, build, check_season
 
 
 def fetch_raw(season, kind):
-    from nba_api.stats.endpoints.leaguegamelog import LeagueGameLog
-    from requests.exceptions import ConnectionError, ReadTimeout, Timeout
-    for attempt in range(3):
-        try:
-            endpoint = LeagueGameLog(season=season, season_type_all_star=kind,
-                                     player_or_team_abbreviation='T', league_id='00', timeout=30)
-            return endpoint.get_json().encode('utf-8')
-        except (Timeout, ConnectionError, ReadTimeout) as exc:
-            if attempt == 2:
-                raise
-            delay = 5 * (2 ** attempt)
-            print(f'{season} {kind}: request failed ({type(exc).__name__}); retrying in {delay}s', flush=True)
-            time.sleep(delay)
-    raise RuntimeError('No response')
+    return fetch_league_game_log(season, kind)
 
 
 def main():

@@ -1,0 +1,31 @@
+main:
+  metadata_url: sqlite:///data/research/nba_lake/catalog.db
+  file_url: file://data/research/nba_lake/files/
+  default_bucket: private-research
+
+sources:
+  nba_stats:
+    type: knicks_history.ingestify_nba.NbaStatsSource
+    configuration:
+      timeout: 45
+      refresh_days: 30
+
+dataset_types:
+  - provider: nba_stats
+    dataset_type: league_game_log
+    identifier_keys:
+      season:
+        transformation: identity
+      season_type:
+        transformation: identity
+
+ingestion_plans:
+  - source: nba_stats
+    dataset_type: league_game_log
+    data_spec_versions:
+      league_game_log: nba-api-v1
+    selectors:
+      - season: 2024-25
+        season_type:
+          - Regular Season
+          - Playoffs

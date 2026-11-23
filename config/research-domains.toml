@@ -4,7 +4,7 @@ distribution = "none for real source data"
 
 [domains.team_games]
 grain = "one team per game"
-status = "implemented"
+status = "implemented; optional nba_api plus Ingestify raw-revision adapter"
 local_root = "data/live"
 
 [domains.player_box_scores]

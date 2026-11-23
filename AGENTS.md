@@ -54,3 +54,20 @@ changing data boundaries, Hub publication, or release architecture.
 `docs/CHECKPOINT.md` records the active GitHub/Hugging Face topology, verified commands,
 implemented research domains, publication boundary, and next safe steps. Update it when
 the architecture, remote state, supported seasons, or policy changes materially.
+
+## Public NYK World Path
+
+Read `docs/PUBLIC_ANALYTICS.md` before changing the public checkpoint. The public adapter
+is `src/knicks_history/public_analytics.py`; it combines BALLDONTLIE `regular` and `ist`
+partitions for the 82-game schedule, excludes the extra NBA Cup championship, and keeps
+raw pages private. `scripts/validate_public_checkpoint.py` binds raw-page hashes, the
+private source manifest, coverage, model artifacts, and the viewer/article bundles.
+`huggingface/public-viewer/` is source for the exploration Space; narrative and methods
+belong in the separate `../huggingface/NYKnicks_World/` repository.
+
+Production publication is intentionally gated: `config/public-analytics.toml` must remain
+disabled until a fresh source-rights review and owner approval. Offline fixtures are tests,
+never production observations. Run the full Python suite, a fresh fixture checkpoint, the
+validator, article build, embed checks, and viewer browser QA before activation. Do not
+commit, push, create Hub resources, merge PRs, or alter visibility unless the user requests
+that external action explicitly. Preserve the untracked user-owned `AWS.md`.

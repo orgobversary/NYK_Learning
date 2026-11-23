@@ -29,6 +29,8 @@ research storage and a private preview Space.
 ## Start here
 
 Read [the local setup manual](docs/START_HERE.md).
+Agents and maintainers resuming active work should also read the
+[current project checkpoint](docs/CHECKPOINT.md) before editing either repository.
 
 From the repository root in your Python 3.11+ environment:
 
@@ -80,6 +82,30 @@ archive pipeline as the NBA Stats adapter. Counts reflect NBA schedule changes, 
 66 games in 2019–20 and 72 in 2020–21. Confirm source permissions and historical accuracy
 before redistributing exports.
 
+### Revisioned NBA Stats lake with Ingestify
+
+For private NBA.com research, `nba_api` remains the endpoint client and Ingestify adds a
+local SQLite catalog, immutable raw-file revisions, checksums, and refresh-window caching.
+The custom source deliberately supports only `LeagueGameLog`, requires explicit seasons,
+keeps requests serial, and defers each network request until Ingestify decides the cached
+dataset needs refreshing.
+
+```bash
+python -m pip install -e '.[lake]'
+cp config/ingestify-nba.example.yaml config/ingestify-nba.local.yaml
+# Edit the local copy's explicit season selectors and refresh_days first.
+python scripts/archive_ingestify_nba.py \
+  --config config/ingestify-nba.local.yaml \
+  --root data/live
+knicks build --root data/live --expected config/expected-live.csv --parquet
+```
+
+Both the lake and ETL outputs remain under ignored `data/` paths. The bridge first lets
+Ingestify sync/cache each raw response, then sends those exact bytes through the existing
+Knicks validation and release pipeline. It does not make NBA.com data public and does not
+alter the separate BALLDONTLIE public checkpoint. Ingestify is an optional AGPL-licensed
+dependency; review those obligations before distributing or hosting a combined service.
+
 ## Local research warehouse and public demonstrations
 
 The research builder turns immutable seasons, the verified 2025–26 postseason, and
@@ -111,6 +137,26 @@ source-specific rights review. See the [research scope](docs/RESEARCH_SCOPE.md) 
 The standalone passing lab still defaults to invented all-pass data. The observed fallback
 is explicitly typed `assisted_made_basket`: it visualizes assister-to-scorer connections,
 not every pass, and reconciles each season to the validated team-assist total.
+
+## Public NYK World release path
+
+The public path is source-specific and separate from the private NBA Stats research
+warehouse. It fetches completed 2017–18 through 2025–26 regular seasons and playoff runs
+from BALLDONTLIE, publishes only minimal game values plus derived aggregates, and evaluates
+transparent team-level models with expanding-season windows and naive baselines.
+Regular-season partitions combine the provider's `regular` and `ist` classifications while
+excluding the extra NBA Cup championship game.
+
+```bash
+make public-fixture
+make public-validate
+```
+
+That command pair is an offline contract rehearsal using invented input; it is not a public
+data release. Real checkpoints run only through the manually approved GitHub Action, archive
+raw responses in the private Hugging Face Bucket, and open review pull requests without
+merging or changing visibility. The viewer and article are released as a matched pair against
+the same checksum manifest. See [Public Analytics Checkpoints](docs/PUBLIC_ANALYTICS.md).
 
 ## License
 

@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "id": 9001,
+      "date": "2024-10-22",
+      "season": 2024,
+      "status": "Final",
+      "status_state": "final",
+      "postseason": false,
+      "season_type": "regular",
+      "home_team_score": 102,
+      "visitor_team_score": 111,
+      "home_team": {"id": 20, "abbreviation": "NYK", "name": "Knicks", "full_name": "New York Knicks"},
+      "visitor_team": {"id": 2, "abbreviation": "BOS", "name": "Celtics", "full_name": "Boston Celtics"}
+    },
+    {
+      "id": 9002,
+      "date": "2024-10-25",
+      "season": 2024,
+      "status": "Final",
+      "status_state": "final",
+      "postseason": false,
+      "season_type": "regular",
+      "home_team_score": 99,
+      "visitor_team_score": 104,
+      "home_team": {"id": 8, "abbreviation": "DET", "name": "Pistons", "full_name": "Detroit Pistons"},
+      "visitor_team": {"id": 20, "abbreviation": "NYK", "name": "Knicks", "full_name": "New York Knicks"}
+    }
+  ],
+  "meta": {"per_page": 100}
+}
